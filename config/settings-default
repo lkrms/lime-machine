@@ -1,0 +1,3 @@
+# Backup result notifications are sent to this address. REQUIRED.
+NOTIFY_EMAIL="root"
+

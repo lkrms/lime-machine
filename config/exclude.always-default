@@ -1,0 +1,16 @@
+# .backup is commonly used as a lime-machine root. Including it here prevents recursion when using shadow copies.
+.backup
+
+*RECYCLE*
+.apdisk
+.com.apple.timemachine.*
+.DS_Store
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+blkid.tab
+pagefile.sys
+System Volume Information
+Thumbs.db
+
