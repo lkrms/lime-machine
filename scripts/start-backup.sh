@@ -18,18 +18,9 @@
 #
 
 SCRIPT_DIR=$(cd "$(dirname "$0")"; pwd)
-BACKUP_ROOT=$(cd "$SCRIPT_DIR/.."; pwd)
-CONFIG_DIR=$BACKUP_ROOT/config
+. "$SCRIPT_DIR/common.sh"
+
 EXCLUDE_PATH=$CONFIG_DIR/exclude.always
-
-if [ ! -f "$CONFIG_DIR/settings" ]; then
-
-	echo "Error: $CONFIG_DIR/settings does not exist. Terminating." 1>&2
-	exit 1
-
-fi
-
-. "$CONFIG_DIR/settings"
 
 if [ ! -f "$EXCLUDE_PATH" ]; then
 
