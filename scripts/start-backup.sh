@@ -195,7 +195,45 @@ function do_mysql {
 	else
 
 		SUBJECT="Success: $SUBJECT"
-		MESSAGE="No errors were reported.\n\n${MESSAGE}${ERR}"
+		MESSAGE="No errors were reported.\n\n${MESSAGE}"
+
+	fi
+
+	do_finalise
+
+}
+
+function do_postgres {
+
+	trap "" HUP
+
+	export PGPASSFILE=`mktemp`
+	echo "*:*:*:*:$SOURCE_PASSWORD" > $PGPASSFILE
+
+	dump_args pg_dumpall --host="$SOURCE_HOST" --port=$SOURCE_PORT --username="$SOURCE_USER" --no-password
+
+	echo -e "`loggable_time`Starting pg_dumpall now.\n" >> "$LOG_FILE"
+
+	pg_dumpall --host="$SOURCE_HOST" --port=$SOURCE_PORT --username="$SOURCE_USER" --no-password 2>$TEMP_FILE | gzip > "$PENDING_TARGET/all_databases_${DATE}.sql.gz"
+
+	STATUS=${PIPESTATUS[0]}
+	ERR=`< $TEMP_FILE`
+
+	echo -e "`loggable_time`Returned from pg_dumpall. stderr:\n\n$ERR\n\nExit status: $STATUS\n" >> "$LOG_FILE"
+
+	rm $PGPASSFILE
+
+	if [ $STATUS -ne 0 ]; then
+
+		SUCCESS=0
+		SUBJECT="FAILURE: $SUBJECT"
+		MESSAGE="Exit status: $STATUS.\n\nOutput collected from stderr is below. See $LOG_FILE on `hostname -s` for more information.\n\nNOTE: $PENDING_TARGET will not be cleaned up automatically.\n\n$ERR"
+
+	else
+
+		SUCCESS=1
+		SUBJECT="Success: $SUBJECT"
+		MESSAGE="No errors were reported.\n\nSee $LOG_FILE on `hostname -s` for more information."
 
 	fi
 
@@ -347,6 +385,7 @@ for TARGET_FILE in `find "$BACKUP_ROOT/targets" -type f \! -iname ".*" \! -iname
 		SOURCE_SECRET=
 		SOURCE_PASSWORD=
 		SOURCE_EXCLUDE=
+		SOURCE_PORT=
 		SSH_USER=
 		SSH_PORT=
 		SSH_KEY=
@@ -436,6 +475,14 @@ for TARGET_FILE in `find "$BACKUP_ROOT/targets" -type f \! -iname ".*" \! -iname
 				echo "Attempting MySQL backup of '$SOURCE_NAME' to '$TARGET_NAME'..."
 
 				(do_mysql &)
+
+				;;
+
+			postgres)
+
+				echo "Attempting PostgreSQL backup of '$SOURCE_NAME' to '$TARGET_NAME'..."
+
+				(do_postgres &)
 
 				;;
 
