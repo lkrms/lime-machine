@@ -357,7 +357,7 @@ for TARGET_FILE in `find "$BACKUP_ROOT/targets" -type f \! -iname ".*" \! -iname
 
 	else
 
-		SOURCE_FILES=`find "$BACKUP_ROOT/active-sources" -type f \! -iname ".*" \! -iname "README.*"`
+		SOURCE_FILES=`find "$BACKUP_ROOT/active-sources" \( -type f -o -type l \) \! -iname ".*" \! -iname "README.*"`
 
 	fi
 
