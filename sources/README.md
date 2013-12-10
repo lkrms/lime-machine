@@ -8,6 +8,7 @@ Available source types:
 * `rsync_ssh`: rsync over SSH. Recommended for backing up data hosted in the cloud.
 * `rsync_shadow`: rsync with automatic Windows shadow copy creation and deletion. Requires a properly configured Windows server (i.e. with cygwin, SSH and rsync).
 * `mysql`: MySQL server that accepts direct connections from the backup server.
+* `postgres`: PostgreSQL server that accepts direct connections from the backup server.
 
 Additional source types will be offered in future versions.
 
@@ -59,4 +60,12 @@ Shadow copies are mounted under `SHADOW_PATH` on the source server, which the rs
     SOURCE_USER=mysql_user
     SOURCE_PASSWORD=MYSQL_USER_PASSWORD
     MYSQLDUMP_OPTIONS=(--lock-all-tables --flush-logs)
+
+### Example "postgres" source configuration
+
+    SOURCE_TYPE=postgres
+    SOURCE_HOST=dbserver.domain.local
+    SOURCE_PORT=5432
+    SOURCE_USER=postgres_user
+    SOURCE_PASSWORD=POSTGRES_USER_PASSWORD
 
