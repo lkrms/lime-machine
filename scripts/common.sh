@@ -19,6 +19,18 @@ fi
 
 . "$CONFIG_DIR/settings"
 
+function date2timestamp {
+
+    date -d "$1" "+%s"
+
+}
+
+function now2timestamp {
+
+    date "+%s"
+
+}
+
 function loggable_time {
 
     echo -n "[ `date "+%c"` ] "

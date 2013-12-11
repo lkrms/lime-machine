@@ -42,7 +42,24 @@ for TARGET_FILE in `get_targets`; do
 
         echo "Looking for expired snapshots in $SOURCE_ROOT..."
 
-        SNAPSHOTS=`find "$SOURCE_ROOT" -mindepth 1 -maxdepth 1 -type d -regextype posix-awk -regex '.*/[0-9]{4}-[0-9]{2}-[0-9]{2}[\-T][0-9]{6}' -exec basename '{}' \; | sort`
+        SNAPSHOTS=(`find "$SOURCE_ROOT" -mindepth 1 -maxdepth 1 -type d -regextype posix-awk -regex '.*/[0-9]{4}-[0-9]{2}-[0-9]{2}[\-T][0-9]{6}' -exec basename '{}' \; | sort`)
+
+        NOW_TIMESTAMP=`now2timestamp`
+        ACCUM_GAP=0
+
+        for ID in `seq 0 $(( ${#SNAPSHOTS[@]} - 1 ))`; do
+
+            SNAPSHOT=${SNAPSHOTS[$ID]}
+
+            THIS_DATE="${SNAPSHOT:0:10} ${SNAPSHOT:11:2}:${SNAPSHOT:13:2}:${SNAPSHOT:15:2}"
+            THIS_TIMESTAMP=`date2timestamp "$SNAPSHOT"`
+            THIS_AGE=$(( NOW_TIMESTAMP - THIS_TIMESTAMP ))
+
+
+
+            LAST_TIMESTAMP=$THIS_TIMESTAMP
+
+        done
 
     done
 
