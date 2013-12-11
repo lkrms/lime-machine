@@ -52,7 +52,7 @@ for TARGET_FILE in `get_targets`; do
             SNAPSHOT=${SNAPSHOTS[$ID]}
 
             THIS_DATE="${SNAPSHOT:0:10} ${SNAPSHOT:11:2}:${SNAPSHOT:13:2}:${SNAPSHOT:15:2}"
-            THIS_TIMESTAMP=`date2timestamp "$SNAPSHOT"`
+            THIS_TIMESTAMP=`date2timestamp "$THIS_DATE"`
             THIS_AGE=$(( NOW_TIMESTAMP - THIS_TIMESTAMP ))
 
 
