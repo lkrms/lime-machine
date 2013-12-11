@@ -30,7 +30,7 @@ for TARGET_FILE in `get_targets`; do
 
     check_target
 
-    if [ $TARGET_OK -eq 0]; then
+    if [ $TARGET_OK -eq 0 ]; then
 
         continue
 
