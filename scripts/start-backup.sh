@@ -76,7 +76,7 @@ function do_rsync {
 
 	fi
 
-	dump_args rsync -lrtOv --no-p --no-g --chmod=ugo=rwX "${OPTIONS[@]}" --exclude-from "$EXCLUDE_PATH" --link-dest="$TARGET_MOUNT_POINT/latest/$SOURCE_NAME/" "$SOURCE" "$PENDING_TARGET/"
+	dump_args rsync -lrtOv --no-p --no-g --chmod=ugo=rwX "${OPTIONS[@]}" --exclude-from "$EXCLUDE_PATH" --link-dest="$TARGET_MOUNT_POINT/latest/$SOURCE_NAME/" "$SOURCE" "$PENDING_TARGET/" >> "$LOG_FILE"
 
 	echo -e "`loggable_time`Starting rsync now. stdout:\n" >> "$LOG_FILE"
 
@@ -154,7 +154,7 @@ function do_mysql {
 
 		for SOURCE_DB in $SOURCE_DB_LIST; do
 
-			dump_args mysqldump --host="$SOURCE_HOST" --user="$SOURCE_USER" --password="$SOURCE_PASSWORD" "${OPTIONS[@]}" "$SOURCE_DB"
+			dump_args mysqldump --host="$SOURCE_HOST" --user="$SOURCE_USER" --password="$SOURCE_PASSWORD" "${OPTIONS[@]}" "$SOURCE_DB" >> "$LOG_FILE"
 
 			echo -e "`loggable_time`Starting mysqldump now.\n" >> "$LOG_FILE"
 
@@ -201,7 +201,7 @@ function do_postgres {
 	export PGPASSFILE=`mktemp`
 	echo "*:*:*:*:$SOURCE_PASSWORD" > $PGPASSFILE
 
-	dump_args pg_dumpall --host="$SOURCE_HOST" --port=$SOURCE_PORT --username="$SOURCE_USER" --no-password
+	dump_args pg_dumpall --host="$SOURCE_HOST" --port=$SOURCE_PORT --username="$SOURCE_USER" --no-password >> "$LOG_FILE"
 
 	echo -e "`loggable_time`Starting pg_dumpall now.\n" >> "$LOG_FILE"
 
@@ -288,32 +288,7 @@ function do_finalise {
 
 }
 
-function loggable_time {
-
-	echo -n "[ `date "+%c"` ] "
-
-}
-
-function dump_args {
-
-	echo -e "`loggable_time`Argument(s) passed to $1:\n" >> "$LOG_FILE"
-
-	shift
-
-	ARG_NO=0
-
-	for ARG in "$@"; do
-
-		let "ARG_NO += 1"
-		echo "$ARG_NO: $ARG" >> "$LOG_FILE"
-
-	done
-
-	echo -e "\n$ARG_NO argument(s) altogether.\n" >> "$LOG_FILE"
-
-}
-
-for TARGET_FILE in `find "$BACKUP_ROOT/targets" -type f \! -iname ".*" \! -iname "README.*"`; do
+for TARGET_FILE in `get_targets`; do
 
 	TARGET_NAME=`basename "$TARGET_FILE"`
 	TARGET_MOUNT_POINT=
@@ -321,19 +296,13 @@ for TARGET_FILE in `find "$BACKUP_ROOT/targets" -type f \! -iname ".*" \! -iname
 
 	. "$TARGET_FILE"
 
-	if [ ! -d "$TARGET_MOUNT_POINT" ]; then
+	check_target
 
-		echo "Invalid mount point for target $TARGET_NAME. Ignoring this target." 1>&2
-		continue
+    if [ $TARGET_OK -eq 0 ]; then
 
-	fi
+        continue
 
-	if [ $TARGET_MOUNT_CHECK -eq 1 -a `stat --format=%d "$TARGET_MOUNT_POINT"` = `stat --format=%d "$TARGET_MOUNT_POINT/.."` ]; then
-
-		echo "Nothing mounted at $TARGET_MOUNT_POINT for target $TARGET_NAME. Ignoring this target."
-		continue
-
-	fi
+    fi
 
 	echo "Found target volume for $TARGET_NAME at $TARGET_MOUNT_POINT. Initiating backup sequence."
 
