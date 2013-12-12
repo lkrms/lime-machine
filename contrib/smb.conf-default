@@ -1,0 +1,30 @@
+# You might want to use this as a starting point when configuring Samba on your host.
+
+[global]
+    workgroup = MYDOMAIN
+    realm = MYDOMAIN.LOCAL
+    security = ADS
+    map to guest = Bad User
+    password server = 192.168.0.1 192.168.0.2
+    log file = /var/log/samba/log.%m
+    max log size = 1000
+    local master = No
+    domain master = No
+    dns proxy = No
+    wins server = 192.168.0.1, 192.168.0.2
+    winbind enum users = Yes
+    winbind enum groups = Yes
+    winbind use default domain = Yes
+    idmap config * : range = 10000-20000
+    idmap config * : backend = tdb
+
+# Optional: share your target directories for remote snapshot browsing.
+[backup]
+    path = /mnt
+    valid users = "@Domain Admins"
+
+# Required if you're using shadow copies (e.g. sources with "SOURCE_TYPE=rsync_shadow").
+[vss]
+    path = /opt/lime-machine/vss
+    guest ok = Yes
+
