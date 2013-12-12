@@ -18,11 +18,9 @@
 #
 
 # exit without error if another instance is already running
-OTHER_PID="$(pgrep -fx "$(which bash) $0")"
+if [ "$(pgrep -fx "$(which bash) $0")" != "$$" ]; then
 
-if [ $? -ne 1 ]; then
-
-  echo "Snapshot thinning is already in progress (PID: $OTHER_PID). Terminating."
+  echo "Snapshot thinning is already in progress. Terminating."
   exit 0
 
 fi
