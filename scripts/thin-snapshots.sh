@@ -18,7 +18,7 @@
 #
 
 # exit without error if another instance is already running
-if [ "$(pgrep -fx "$(which bash) $0")" != "$$" ]; then
+if [ "$(pgrep -f "$(basename $0)")" != "$$" ]; then
 
   echo "Snapshot thinning is already in progress. Terminating."
   exit 0
