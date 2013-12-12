@@ -40,7 +40,7 @@ for TARGET_FILE in `get_targets`; do
 
     echo "Found target volume for $TARGET_NAME at $TARGET_MOUNT_POINT. Initiating snapshot thinning for all sources."
 
-    for SOURCE_ROOT in `find "$TARGET_MOUNT_POINT/snapshots" -mindepth 1 -maxdepth 1 -type d ! -name ".empty" ! -name ".pending"`; do
+    for SOURCE_ROOT in `find "$TARGET_MOUNT_POINT/snapshots" -mindepth 1 -maxdepth 1 -type d ! -name ".empty" ! -name ".pending" | sort`; do
 
         echo "Looking for expired snapshots in $SOURCE_ROOT..."
 
@@ -106,9 +106,19 @@ for TARGET_FILE in `get_targets`; do
 
         done
 
-        echo "$SNAPSHOT_COUNT snapshots found. $EXPIRED_COUNT snapshots have expired and will be trimmed."
+        echo "$SNAPSHOT_COUNT snapshots found. $EXPIRED_COUNT snapshots have expired and will be removed."
 
     done
+
+done
+
+echo -e "\n\nExpired snapshots: ${#EXPIRED_SNAPSHOTS[@]} in total.\n"
+
+for SNAPSHOT_ROOT in ${EXPIRED_SNAPSHOTS[@]}; do
+
+    echo "Removing $SNAPSHOT_ROOT..."
+
+    echo rm -Rf --one-file-system "$SNAPSHOT_ROOT"
 
 done
 
