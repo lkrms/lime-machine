@@ -19,6 +19,12 @@ fi
 
 . "$CONFIG_DIR/settings"
 
+function snapshot2date {
+
+    echo "${1:0:10} ${1:11:2}:${1:13:2}:${1:15:2}"
+
+}
+
 function date2timestamp {
 
     date -d "$1" "+%s"

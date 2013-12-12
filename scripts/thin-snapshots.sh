@@ -44,16 +44,67 @@ for TARGET_FILE in `get_targets`; do
 
         SNAPSHOTS=(`find "$SOURCE_ROOT" -mindepth 1 -maxdepth 1 -type d -regextype posix-awk -regex '.*/[0-9]{4}-[0-9]{2}-[0-9]{2}[\-T][0-9]{6}' -exec basename '{}' \; | sort`)
 
+        SNAPSHOT_COUNT=${#SNAPSHOTS[@]}
         NOW_TIMESTAMP=`now2timestamp`
         ACCUM_GAP=0
 
-        for ID in `seq 0 $(( ${#SNAPSHOTS[@]} - 1 ))`; do
+        for ID in `seq 0 $(( SNAPSHOT_COUNT - 1 ))`; do
 
             SNAPSHOT=${SNAPSHOTS[$ID]}
 
-            THIS_DATE="${SNAPSHOT:0:10} ${SNAPSHOT:11:2}:${SNAPSHOT:13:2}:${SNAPSHOT:15:2}"
+            DELETE_SNAPSHOT=0
+
+            THIS_DATE=`snapshot2date "$SNAPSHOT"`
             THIS_TIMESTAMP=`date2timestamp "$THIS_DATE"`
-            THIS_AGE=$(( NOW_TIMESTAMP - THIS_TIMESTAMP ))
+
+            if [ $ID -gt 0 -a $(( ID + 1 )) -lt $SNAPSHOT_COUNT ]; then
+
+                THIS_AGE=$(( NOW_TIMESTAMP - THIS_TIMESTAMP ))
+
+                # these MAX_GAP values factor in a 5% tolerance for variation in snapshot times
+                if [ $THIS_AGE -le 86400 ]; then
+
+                    # if age <= 24 hours, keep hourlies
+                    MAX_GAP=3780
+
+                elif [ $THIS_AGE -le 2419200 ]; then
+
+                    # if age <= 28 days, keep dailies
+                    MAX_GAP=90720
+
+                else
+
+                    # otherwise, keep weeklies
+                    MAX_GAP=635040
+
+                fi
+
+                THIS_GAP=$(( THIS_TIMESTAMP - LAST_TIMESTAMP + ACCUM_GAP ))
+                ACCUM_GAP=0
+
+                NEXT_GAP=$(( $(date2timestamp "$(snapshot2date "${SNAPSHOTS[$(( ID + 1 ))]}")") - THIS_TIMESTAMP ))
+
+                # this snapshot is considered expired if:
+                # 1. the seconds elapsed ("gap") since the previous snapshot is less than MAX_GAP; and
+                # 2. the NEXT snapshot's "gap" will still be less than MAX_GAP after deleting THIS snapshot
+                if [ $(( THIS_GAP + NEXT_GAP )) -lt $MAX_GAP ]; then
+
+                    DELETE_SNAPSHOT=1
+                    ACCUM_GAP=$THIS_GAP
+
+                fi
+
+            fi
+
+            if [ $DELETE_SNAPSHOT -eq 0 ]; then
+
+                echo "Keeping $SNAPSHOT."
+
+            else
+
+                echo "Deleting $SNAPSHOT."
+
+            fi
 
 
 
