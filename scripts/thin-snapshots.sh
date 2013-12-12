@@ -96,17 +96,17 @@ for TARGET_FILE in `get_targets`; do
 
                     EXPIRED_SNAPSHOTS+=("$SOURCE_ROOT/$SNAPSHOT")
                     ACCUM_GAP=$THIS_GAP
-                    $(( EXPIRED_COUNT++ ))
+                    (( EXPIRED_COUNT++ ))
 
                 fi
 
             fi
 
-            echo "$SNAPSHOT_COUNT snapshots found. $EXPIRED_COUNT snapshots have expired and will be trimmed."
-
             LAST_TIMESTAMP=$THIS_TIMESTAMP
 
         done
+
+        echo "$SNAPSHOT_COUNT snapshots found. $EXPIRED_COUNT snapshots have expired and will be trimmed."
 
     done
 
