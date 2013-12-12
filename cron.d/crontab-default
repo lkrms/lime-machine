@@ -2,5 +2,9 @@
 
 # Startup error messages are directed to stderr, so it's safe to dump stdout here.
 # Change "ictmanager" to the owner of your target volumes.
-0 18 * * * ictmanager /srv/lime-machine/scripts/start-backup.sh > /dev/null
+0 19 * * * ictmanager /opt/lime-machine/scripts/start-backup.sh > /dev/null
+
+# Daily thinning may not be enough if you're taking hourly snapshots.
+# Frequent thinning is safe (single instance checks are performed).
+0 7 * * * ictmanager /opt/lime-machine/scripts/thin-snapshots.sh > /dev/null
 

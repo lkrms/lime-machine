@@ -17,6 +17,16 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+# exit without error if another instance is already running
+OTHER_PID="$(pgrep -fx "$(which bash) $0")"
+
+if [ $? -ne 1 ]; then
+
+  echo "Snapshot thinning is already in progress (PID: $OTHER_PID). Terminating."
+  exit 0
+
+fi
+
 SCRIPT_DIR=$(cd "$(dirname "$0")"; pwd)
 . "$SCRIPT_DIR/common.sh"
 
