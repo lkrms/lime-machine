@@ -296,13 +296,7 @@ for TARGET_FILE in `get_targets`; do
 
 	. "$TARGET_FILE"
 
-	check_target
-
-    if [ $TARGET_OK -eq 0 ]; then
-
-        continue
-
-    fi
+    check_target || continue
 
 	echo "Found target volume for $TARGET_NAME at $TARGET_MOUNT_POINT. Initiating backup sequence."
 

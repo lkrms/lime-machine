@@ -70,21 +70,21 @@ function get_targets {
 
 function check_target {
 
-    TARGET_OK=1
-
     if [ ! -d "$TARGET_MOUNT_POINT" ]; then
 
         echo "Invalid mount point for target $TARGET_NAME. Ignoring this target." 1>&2
-        TARGET_OK=0
+        return 1
 
     fi
 
     if [ $TARGET_MOUNT_CHECK -eq 1 -a `stat --format=%d "$TARGET_MOUNT_POINT"` = `stat --format=%d "$TARGET_MOUNT_POINT/.."` ]; then
 
         echo "Nothing mounted at $TARGET_MOUNT_POINT for target $TARGET_NAME. Ignoring this target."
-        TARGET_OK=0
+        return 1
 
     fi
+
+    return 0
 
 }
 

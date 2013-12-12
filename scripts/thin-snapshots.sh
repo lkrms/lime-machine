@@ -28,9 +28,11 @@ fi
 SCRIPT_DIR=$(cd "$(dirname "$0")"; pwd)
 . "$SCRIPT_DIR/common.sh"
 
-EXPIRED_SNAPSHOTS=()
+EXPIRED_TOTAL=0
 
 for TARGET_FILE in `get_targets`; do
+
+    EXPIRED_SNAPSHOTS=()
 
     TARGET_NAME=`basename "$TARGET_FILE"`
     TARGET_MOUNT_POINT=
@@ -38,13 +40,7 @@ for TARGET_FILE in `get_targets`; do
 
     . "$TARGET_FILE"
 
-    check_target
-
-    if [ $TARGET_OK -eq 0 ]; then
-
-        continue
-
-    fi
+    check_target || continue
 
     echo "Found target volume for $TARGET_NAME at $TARGET_MOUNT_POINT. Initiating snapshot thinning for all sources."
 
@@ -105,6 +101,7 @@ for TARGET_FILE in `get_targets`; do
                     EXPIRED_SNAPSHOTS+=("$SOURCE_ROOT/$SNAPSHOT")
                     ACCUM_GAP=$THIS_GAP
                     (( EXPIRED_COUNT++ ))
+                    (( EXPIRED_TOTAL++ ))
 
                 fi
 
@@ -118,15 +115,24 @@ for TARGET_FILE in `get_targets`; do
 
     done
 
+    echo "${#EXPIRED_SNAPSHOTS[@]} have expired on target $TARGET_NAME. Removal will commence in 60 seconds."
+
+    # start one subshell per target (fastest processing with minimal hard drive thrashing)
+    (
+        sleep 60
+
+        for SNAPSHOT_ROOT in ${EXPIRED_SNAPSHOTS[@]}; do
+
+            echo "Removing $SNAPSHOT_ROOT..."
+
+            rm -Rf --one-file-system "$SNAPSHOT_ROOT"
+
+        done
+    ) &
+
 done
 
-echo -e "\n\nExpired snapshots: ${#EXPIRED_SNAPSHOTS[@]} in total.\n"
+wait
 
-for SNAPSHOT_ROOT in ${EXPIRED_SNAPSHOTS[@]}; do
-
-    echo "Removing $SNAPSHOT_ROOT..."
-
-    rm -Rf --one-file-system "$SNAPSHOT_ROOT"
-
-done
+echo -e "\n\nThinning complete. Snapshots removed: $EXPIRED_TOTAL in total.\n"
 
