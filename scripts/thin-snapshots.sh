@@ -20,6 +20,8 @@
 SCRIPT_DIR=$(cd "$(dirname "$0")"; pwd)
 . "$SCRIPT_DIR/common.sh"
 
+EXPIRED_SNAPSHOTS=()
+
 for TARGET_FILE in `get_targets`; do
 
     TARGET_NAME=`basename "$TARGET_FILE"`
@@ -45,14 +47,13 @@ for TARGET_FILE in `get_targets`; do
         SNAPSHOTS=(`find "$SOURCE_ROOT" -mindepth 1 -maxdepth 1 -type d -regextype posix-awk -regex '.*/[0-9]{4}-[0-9]{2}-[0-9]{2}[\-T][0-9]{6}' -exec basename '{}' \; | sort`)
 
         SNAPSHOT_COUNT=${#SNAPSHOTS[@]}
+        EXPIRED_COUNT=0
         NOW_TIMESTAMP=`now2timestamp`
         ACCUM_GAP=0
 
         for ID in `seq 0 $(( SNAPSHOT_COUNT - 1 ))`; do
 
             SNAPSHOT=${SNAPSHOTS[$ID]}
-
-            DELETE_SNAPSHOT=0
 
             THIS_DATE=`snapshot2date "$SNAPSHOT"`
             THIS_TIMESTAMP=`date2timestamp "$THIS_DATE"`
@@ -84,29 +85,24 @@ for TARGET_FILE in `get_targets`; do
 
                 NEXT_GAP=$(( $(date2timestamp "$(snapshot2date "${SNAPSHOTS[$(( ID + 1 ))]}")") - THIS_TIMESTAMP ))
 
-                # this snapshot is considered expired if:
-                # 1. the seconds elapsed ("gap") since the previous snapshot is less than MAX_GAP; and
-                # 2. the NEXT snapshot's "gap" will still be less than MAX_GAP after deleting THIS snapshot
+                # This snapshot is considered expired if:
+                #
+                # (1) the seconds elapsed ("gap") since the previous snapshot is less than MAX_GAP; and
+                # (2) the NEXT snapshot's "gap" will still be less than MAX_GAP after deleting it.
+                #
+                # Because (2) implies (1), this is a very simple test.
+                #
                 if [ $(( THIS_GAP + NEXT_GAP )) -lt $MAX_GAP ]; then
 
-                    DELETE_SNAPSHOT=1
+                    EXPIRED_SNAPSHOTS+=("$SOURCE_ROOT/$SNAPSHOT")
                     ACCUM_GAP=$THIS_GAP
+                    $(( EXPIRED_COUNT++ ))
 
                 fi
 
             fi
 
-            if [ $DELETE_SNAPSHOT -eq 0 ]; then
-
-                echo "Keeping $SNAPSHOT."
-
-            else
-
-                echo "Deleting $SNAPSHOT."
-
-            fi
-
-
+            echo "$SNAPSHOT_COUNT snapshots found. $EXPIRED_COUNT snapshots have expired and will be trimmed."
 
             LAST_TIMESTAMP=$THIS_TIMESTAMP
 
@@ -115,3 +111,4 @@ for TARGET_FILE in `get_targets`; do
     done
 
 done
+
