@@ -118,7 +118,7 @@ for SNAPSHOT_ROOT in ${EXPIRED_SNAPSHOTS[@]}; do
 
     echo "Removing $SNAPSHOT_ROOT..."
 
-    echo rm -Rf --one-file-system "$SNAPSHOT_ROOT"
+    rm -Rf --one-file-system "$SNAPSHOT_ROOT"
 
 done
 
