@@ -135,7 +135,7 @@ for TARGET_FILE in `get_targets`; do
 done
 
 # kill subshells if the main process is terminated
-trap "{ log_message 'Snapshot thinning interrupted.'; kill 0; }" SIGINT SIGTERM
+trap '{ log_message "Snapshot thinning interrupted."; kill $(jobs -p); }' SIGINT SIGTERM
 
 wait && log_message "Thinning complete."
 
