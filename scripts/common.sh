@@ -19,6 +19,33 @@ fi
 
 . "$CONFIG_DIR/settings"
 
+ERROR_LOG=""
+
+function log_error {
+
+    # don't output to stderr unless we're on a tty
+    tty -s && echo -e "$@" 1>&2
+
+    echo -e "`log_time` $@" >> "$LOG_FILE"
+    ERROR_LOG="${ERROR_LOG}`log_time` $@\n"
+
+}
+
+function log_message {
+
+    # don't output to stdout unless we're on a tty
+    tty -s && echo -e "$@"
+
+    echo -e "`log_time` $@" >> "$LOG_FILE"
+
+}
+
+function log_source {
+
+    echo -e "`log_time` $@" >> "$SOURCE_LOG_FILE"
+
+}
+
 function snapshot2date {
 
     echo "${1:0:10} ${1:11:2}:${1:13:2}:${1:15:2}"
@@ -37,15 +64,15 @@ function now2timestamp {
 
 }
 
-function loggable_time {
+function log_time {
 
-    echo -n "[ `date "+%c"` ] "
+    date "+%b %d %T"
 
 }
 
 function dump_args {
 
-    echo -e "`loggable_time`Argument(s) passed to $1:\n"
+    echo -e "Argument(s) passed to $1:\n"
 
     shift
 
@@ -53,7 +80,7 @@ function dump_args {
 
     for ARG in "$@"; do
 
-        let "ARG_NO += 1"
+        (( ARG_NO++ ))
         echo "$ARG_NO: $ARG"
 
     done
@@ -72,14 +99,14 @@ function check_target {
 
     if [ ! -d "$TARGET_MOUNT_POINT" ]; then
 
-        echo "Invalid mount point for target $TARGET_NAME. Ignoring this target." 1>&2
+        log_error "Invalid mount point for target $TARGET_NAME. Ignoring this target."
         return 1
 
     fi
 
     if [ $TARGET_MOUNT_CHECK -eq 1 -a `stat --format=%d "$TARGET_MOUNT_POINT"` = `stat --format=%d "$TARGET_MOUNT_POINT/.."` ]; then
 
-        echo "Nothing mounted at $TARGET_MOUNT_POINT for target $TARGET_NAME. Ignoring this target."
+        log_message "Nothing mounted at $TARGET_MOUNT_POINT for target $TARGET_NAME. Ignoring this target."
         return 1
 
     fi

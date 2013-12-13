@@ -76,33 +76,33 @@ function do_rsync {
 
 	fi
 
-	dump_args rsync -lrtOv --no-p --no-g --chmod=ugo=rwX "${OPTIONS[@]}" --exclude-from "$EXCLUDE_PATH" --link-dest="$TARGET_MOUNT_POINT/latest/$SOURCE_NAME/" "$SOURCE" "$PENDING_TARGET/" >> "$LOG_FILE"
+	log_source "$(dump_args rsync -lrtOv --no-p --no-g --chmod=ugo=rwX "${OPTIONS[@]}" --exclude-from "$EXCLUDE_PATH" --link-dest="$TARGET_MOUNT_POINT/latest/$SOURCE_NAME/" "$SOURCE" "$PENDING_TARGET/")"
 
-	echo -e "`loggable_time`Starting rsync now. stdout:\n" >> "$LOG_FILE"
+	log_source "Starting rsync now. stdout:\n"
 
-	rsync -lrtOv --no-p --no-g --chmod=ugo=rwX "${OPTIONS[@]}" --exclude-from "$EXCLUDE_PATH" --link-dest="$TARGET_MOUNT_POINT/latest/$SOURCE_NAME/" "$SOURCE" "$PENDING_TARGET/" >> "$LOG_FILE" 2>$TEMP_FILE
+	rsync -lrtOv --no-p --no-g --chmod=ugo=rwX "${OPTIONS[@]}" --exclude-from "$EXCLUDE_PATH" --link-dest="$TARGET_MOUNT_POINT/latest/$SOURCE_NAME/" "$SOURCE" "$PENDING_TARGET/" >> "$SOURCE_LOG_FILE" 2>$TEMP_FILE
 
 	STATUS=$?
 	ERR=`< $TEMP_FILE`
 
-	echo -e "\n\n`loggable_time`Returned from rsync. stderr:\n\n$ERR\n\nExit status: $STATUS\n" >> "$LOG_FILE"
+	log_source "Returned from rsync. stderr:\n\n$ERR\n\nExit status: $STATUS\n"
 
 	if [ $STATUS -eq 0 ]; then
 
 		SUCCESS=1
 		SUBJECT="Success: $SUBJECT"
-		MESSAGE="No errors were reported.\n\nSee $LOG_FILE on `hostname -s` for more information."
+		MESSAGE="No errors were reported.\n\nSee $SOURCE_LOG_FILE on `hostname -s` for more information."
 
 	elif [ $STATUS -eq 23 -o $STATUS -eq 24 ]; then
 
 		SUCCESS=1
 		SUBJECT="Success (partial transfer): $SUBJECT"
-		MESSAGE="Partial transfer reported (exit status: $STATUS).\n\nOutput collected from stderr is below. See $LOG_FILE on `hostname -s` for more information.\n\n$ERR"
+		MESSAGE="Partial transfer reported (exit status: $STATUS).\n\nOutput collected from stderr is below. See $SOURCE_LOG_FILE on `hostname -s` for more information.\n\n$ERR"
 
 	else
 
 		SUBJECT="FAILURE: $SUBJECT"
-		MESSAGE="Exit status: $STATUS.\n\nOutput collected from stderr is below. See $LOG_FILE on `hostname -s` for more information.\n\nNOTE: $PENDING_TARGET will not be cleaned up automatically.\n\n$ERR"
+		MESSAGE="Exit status: $STATUS.\n\nOutput collected from stderr is below. See $SOURCE_LOG_FILE on `hostname -s` for more information.\n\nNOTE: $PENDING_TARGET will not be cleaned up automatically.\n\n$ERR"
 
 	fi
 
@@ -132,14 +132,14 @@ function do_mysql {
 
 	SUCCESS=1
 
-	echo -e "`loggable_time`Retrieving list of databases.\n" >> "$LOG_FILE"
+	log_source "Retrieving list of databases."
 
 	SOURCE_DB_LIST=`mysql --host="$SOURCE_HOST" --user="$SOURCE_USER" --password="$SOURCE_PASSWORD" --batch --skip-column-names --execute="show databases" 2>$TEMP_FILE | grep -v "^\(mysql\|information_schema\|test\)\$"`
 
 	STATUS=$?
 	ERR=`< $TEMP_FILE`
 
-	echo -e "`loggable_time`Returned from mysql. stderr:\n\n$ERR\n\nExit status: $STATUS\n" >> "$LOG_FILE"
+	log_source "Returned from mysql. stderr:\n\n$ERR\n\nExit status: $STATUS\n"
 
 	if [ $STATUS -ne 0 ]; then
 
@@ -148,22 +148,22 @@ function do_mysql {
 
 	else
 
-		echo -e "Databases discovered:\n\n$SOURCE_DB_LIST\n" >> "$LOG_FILE"
+		log_source "Databases discovered:\n\n$SOURCE_DB_LIST\n"
 
 		ERR=
 
 		for SOURCE_DB in $SOURCE_DB_LIST; do
 
-			dump_args mysqldump --host="$SOURCE_HOST" --user="$SOURCE_USER" --password="$SOURCE_PASSWORD" "${OPTIONS[@]}" "$SOURCE_DB" >> "$LOG_FILE"
+			log_source "$(dump_args mysqldump --host="$SOURCE_HOST" --user="$SOURCE_USER" --password="$SOURCE_PASSWORD" "${OPTIONS[@]}" "$SOURCE_DB")"
 
-			echo -e "`loggable_time`Starting mysqldump now.\n" >> "$LOG_FILE"
+			log_source "Starting mysqldump now."
 
 			mysqldump --host="$SOURCE_HOST" --user="$SOURCE_USER" --password="$SOURCE_PASSWORD" "${OPTIONS[@]}" "$SOURCE_DB" 2>$TEMP_FILE | gzip > "$PENDING_TARGET/${SOURCE_DB}_${DATE}.sql.gz"
 
 			STATUS=${PIPESTATUS[0]}
 			THIS_ERR=`< $TEMP_FILE`
 
-			echo -e "`loggable_time`Returned from mysqldump. stderr:\n\n$THIS_ERR\n\nExit status: $STATUS\n" >> "$LOG_FILE"
+			log_source "Returned from mysqldump. stderr:\n\n$THIS_ERR\n\nExit status: $STATUS\n"
 
 			if [ $STATUS -ne 0 ]; then
 
@@ -201,16 +201,16 @@ function do_postgres {
 	export PGPASSFILE=`mktemp`
 	echo "*:*:*:*:$SOURCE_PASSWORD" > $PGPASSFILE
 
-	dump_args pg_dumpall --host="$SOURCE_HOST" --port=$SOURCE_PORT --username="$SOURCE_USER" --no-password >> "$LOG_FILE"
+	log_source $(dump_args pg_dumpall --host="$SOURCE_HOST" --port=$SOURCE_PORT --username="$SOURCE_USER" --no-password)
 
-	echo -e "`loggable_time`Starting pg_dumpall now.\n" >> "$LOG_FILE"
+	log_source "Starting pg_dumpall now."
 
 	pg_dumpall --host="$SOURCE_HOST" --port=$SOURCE_PORT --username="$SOURCE_USER" --no-password 2>$TEMP_FILE | gzip > "$PENDING_TARGET/all_databases_${DATE}.sql.gz"
 
 	STATUS=${PIPESTATUS[0]}
 	ERR=`< $TEMP_FILE`
 
-	echo -e "`loggable_time`Returned from pg_dumpall. stderr:\n\n$ERR\n\nExit status: $STATUS\n" >> "$LOG_FILE"
+	log_source "Returned from pg_dumpall. stderr:\n\n$ERR\n\nExit status: $STATUS\n"
 
 	rm $PGPASSFILE
 
@@ -218,13 +218,13 @@ function do_postgres {
 
 		SUCCESS=0
 		SUBJECT="FAILURE: $SUBJECT"
-		MESSAGE="Exit status: $STATUS.\n\nOutput collected from stderr is below. See $LOG_FILE on `hostname -s` for more information.\n\nNOTE: $PENDING_TARGET will not be cleaned up automatically.\n\n$ERR"
+		MESSAGE="Exit status: $STATUS.\n\nOutput collected from stderr is below. See $SOURCE_LOG_FILE on `hostname -s` for more information.\n\nNOTE: $PENDING_TARGET will not be cleaned up automatically.\n\n$ERR"
 
 	else
 
 		SUCCESS=1
 		SUBJECT="Success: $SUBJECT"
-		MESSAGE="No errors were reported.\n\nSee $LOG_FILE on `hostname -s` for more information."
+		MESSAGE="No errors were reported.\n\nSee $SOURCE_LOG_FILE on `hostname -s` for more information."
 
 	fi
 
@@ -237,18 +237,21 @@ function do_finalise {
 	if [ $SUCCESS -eq 1 ]; then
 
 		RESULT="SUCCEEDED"
+		NOTIFY="$NOTIFY_EMAIL"
 
 	else
 
 		RESULT="FAILED"
+		NOTIFY="$ERROR_EMAIL"
 
 	fi
 
-	echo -e "`loggable_time`Backup operation: $RESULT\n" >> "$LOG_FILE"
+	log_message "$SUBJECT"
+	log_source "Backup operation: $RESULT"
 
-	echo -e "$MESSAGE" | mail -s "$SUBJECT" "$NOTIFY_EMAIL"
+	echo -e "$MESSAGE" | mail -s "$SUBJECT" "$NOTIFY"
 
-	echo -e "`loggable_time`Result notification sent:\n\nTo: $NOTIFY_EMAIL\nSubject: $SUBJECT\nMessage:\n$MESSAGE.\n" >> "$LOG_FILE"
+	log_source "Result notification sent:\n\nTo: $NOTIFY\nSubject: $SUBJECT\nMessage:\n$MESSAGE.\n"
 
 	if [ $SUCCESS -eq 1 ]; then
 
@@ -256,27 +259,27 @@ function do_finalise {
 		rm -f "$TARGET_MOUNT_POINT/latest/$SOURCE_NAME"
 		ln -s "$TARGET_MOUNT_POINT/snapshots/$SOURCE_NAME/$DATE" "$TARGET_MOUNT_POINT/latest/$SOURCE_NAME"
 
-		echo -e "`loggable_time`Snapshot moved from 'pending' to 'latest'.\n" >> "$LOG_FILE"
+		log_source "Snapshot moved from 'pending' to 'latest'.\n"
 
 		if [ $SOURCE_TYPE = "rsync_shadow" ]; then
 
-			echo -e "`loggable_time`Closing shadow copy.\n" >> "$LOG_FILE"
+			log_source "Closing shadow copy."
 
 			ssh -o StrictHostKeyChecking=no -p $SSH_PORT -i "$SSH_KEY" "$SSH_USER@$SOURCE_HOST" "//`hostname -s`/vss/close_copy.cmd $SHADOW_PATH $DATE" > $TEMP_FILE 2>&1
 
 			STATUS=$?
 			ERR=`< $TEMP_FILE`
 
-			echo -e "`loggable_time`Returned from close_copy.cmd. Output:\n\n$ERR\n\nExit status: $STATUS\n" >> "$LOG_FILE"
+			log_source "Returned from close_copy.cmd. Output:\n\n$ERR\n\nExit status: $STATUS\n"
 
 			if [ $STATUS -ne 0 ]; then
 
 				SUBJECT="WARNING: $SUBJECT"
 				MESSAGE="Unable to close shadow copy. Exit status: $STATUS.\n\nOutput collected from stderr is below.\n\n$ERR"
 
-				echo -e "$MESSAGE" | mail -s "$SUBJECT" "$NOTIFY_EMAIL"
+				echo -e "$MESSAGE" | mail -s "$SUBJECT" "$ERROR_EMAIL"
 
-				echo -e "`loggable_time`Error notification sent:\n\nTo: $NOTIFY_EMAIL\nSubject: $SUBJECT\nMessage:\n$MESSAGE.\n" >> "$LOG_FILE"
+				log_source "Error notification sent:\n\nTo: $ERROR_EMAIL\nSubject: $SUBJECT\nMessage:\n$MESSAGE.\n"
 
 			fi
 
@@ -298,7 +301,7 @@ for TARGET_FILE in `get_targets`; do
 
     check_target || continue
 
-	echo "Found target volume for $TARGET_NAME at $TARGET_MOUNT_POINT. Initiating backup sequence."
+	log_message "Found target volume for $TARGET_NAME at $TARGET_MOUNT_POINT. Initiating backup sequence."
 
 	mkdir -p "$TARGET_MOUNT_POINT/snapshots/.empty"
 	mkdir -p "$TARGET_MOUNT_POINT/snapshots/.pending"
@@ -323,7 +326,7 @@ for TARGET_FILE in `get_targets`; do
 
 			if [ ! -f "$SOURCE_FILE" ]; then
 
-				echo "Unable to find source file $SOURCE_FILE. Ignoring this source." 1>&2
+				log_error "Unable to find source file $SOURCE_FILE. Ignoring this source."
 				continue
 
 			fi
@@ -366,21 +369,21 @@ for TARGET_FILE in `get_targets`; do
 		SUBJECT="backup of $SOURCE_NAME to `hostname -s`/$TARGET_NAME [ref: $DATE]"
 		MESSAGE=
 
-		LOG_FILE="$TARGET_MOUNT_POINT/logs/$SOURCE_NAME/$SOURCE_NAME-$DATE.log"
+		SOURCE_LOG_FILE="$TARGET_MOUNT_POINT/logs/$SOURCE_NAME/$SOURCE_NAME-$DATE.log"
 		TEMP_FILE=`mktemp`
 		PENDING_TARGET="$TARGET_MOUNT_POINT/snapshots/.pending/$SOURCE_NAME/$DATE"
 
-		echo -e "`loggable_time`Backup operation commencing. Environment:\n\n`printenv`\n" >> "$LOG_FILE"
+		log_source "Backup operation commencing. Environment:\n\n`printenv`\n"
 
 		mkdir -p "$PENDING_TARGET"
 
-		echo -e "`loggable_time`Target directory created.\n" >> "$LOG_FILE"
+		log_source "Target directory created.\n"
 
 		case $SOURCE_TYPE in
 
 			rsync)
 
-				echo "Attempting rsync backup of '$SOURCE_NAME' to '$TARGET_NAME'..."
+				log_message "Attempting rsync backup of '$SOURCE_NAME' to '$TARGET_NAME'..."
 
 				(do_rsync $SOURCE_USER@$SOURCE_HOST::"$SOURCE_PATH/" --copy-unsafe-links &)
 
@@ -388,7 +391,7 @@ for TARGET_FILE in `get_targets`; do
 
 			rsync_ssh)
 
-				echo "Attempting rsync backup of '$SOURCE_NAME' to '$TARGET_NAME' over SSH..."
+				log_message "Attempting rsync backup of '$SOURCE_NAME' to '$TARGET_NAME' over SSH..."
 
 				(do_rsync $SSH_USER@$SOURCE_HOST:"$SOURCE_PATH/" --copy-unsafe-links -e "ssh -o StrictHostKeyChecking=no -p $SSH_PORT -i '$SSH_KEY'" &)
 
@@ -396,16 +399,16 @@ for TARGET_FILE in `get_targets`; do
 
 			rsync_shadow)
 
-				echo "Attempting rsync backup of '$SOURCE_NAME' to '$TARGET_NAME' with shadow copy..."
+				log_message "Attempting rsync backup of '$SOURCE_NAME' to '$TARGET_NAME' with shadow copy..."
 
-				echo -e "`loggable_time`Creating shadow copy.\n" >> "$LOG_FILE"
+				log_source "Creating shadow copy."
 
 				ssh -o StrictHostKeyChecking=no -p $SSH_PORT -i "$SSH_KEY" "$SSH_USER@$SOURCE_HOST" "//`hostname -s`/vss/create_copy.cmd $SHADOW_PATH $DATE $SHADOW_VOLUMES" > $TEMP_FILE 2>&1
 
 				STATUS=$?
 				ERR=`< $TEMP_FILE`
 
-				echo -e "`loggable_time`Returned from create_copy.cmd. Output:\n\n$ERR\n\nExit status: $STATUS\n" >> "$LOG_FILE"
+				log_source "Returned from create_copy.cmd. Output:\n\n$ERR\n\nExit status: $STATUS\n"
 
 				if [ $STATUS -ne 0 ]; then
 
@@ -426,7 +429,7 @@ for TARGET_FILE in `get_targets`; do
 
 			mysql)
 
-				echo "Attempting MySQL backup of '$SOURCE_NAME' to '$TARGET_NAME'..."
+				log_message "Attempting MySQL backup of '$SOURCE_NAME' to '$TARGET_NAME'..."
 
 				(do_mysql &)
 
@@ -434,7 +437,7 @@ for TARGET_FILE in `get_targets`; do
 
 			postgres)
 
-				echo "Attempting PostgreSQL backup of '$SOURCE_NAME' to '$TARGET_NAME'..."
+				log_message "Attempting PostgreSQL backup of '$SOURCE_NAME' to '$TARGET_NAME'..."
 
 				(do_postgres &)
 
@@ -442,7 +445,7 @@ for TARGET_FILE in `get_targets`; do
 
 			*)
 
-				echo "Invalid source type for '$SOURCE_NAME'. Ignoring this source." 1>&2
+				log_error "Invalid source type for '$SOURCE_NAME'. Ignoring this source."
 
 				;;
 
