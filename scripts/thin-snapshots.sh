@@ -19,9 +19,6 @@
 
 trap "" SIGHUP
 
-# kill subshells if the main process is terminated
-trap "log_message 'Snapshot thinning interrupted.'; kill 0" SIGINT SIGTERM
-
 SCRIPT_DIR=$(cd "$(dirname "$0")"; pwd)
 . "$SCRIPT_DIR/common.sh"
 
@@ -137,7 +134,8 @@ for TARGET_FILE in `get_targets`; do
 
 done
 
-wait
+# kill subshells if the main process is terminated
+trap "{ log_message 'Snapshot thinning interrupted.'; kill 0; }" SIGINT SIGTERM
 
-echo -e "\n\nThinning complete. Snapshots removed: $EXPIRED_TOTAL in total.\n"
+wait && log_message "Thinning complete."
 
