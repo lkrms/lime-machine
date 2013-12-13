@@ -113,19 +113,15 @@ for TARGET_FILE in `get_targets`; do
 
         done
 
-        log_message "$SNAPSHOT_COUNT snapshots found. $EXPIRED_COUNT snapshots have expired and will be removed."
+        log_message "$SNAPSHOT_COUNT snapshots found. $EXPIRED_COUNT snapshots have expired and will be removed..."
 
     done
 
-    echo "${#EXPIRED_SNAPSHOTS[@]} have expired on target $TARGET_NAME. Removal will commence in 60 seconds."
-
     # start one subshell per target (fastest processing with minimal hard drive thrashing)
     (
-        sleep 60
-
         for SNAPSHOT_ROOT in ${EXPIRED_SNAPSHOTS[@]}; do
 
-            echo "Removing $SNAPSHOT_ROOT..."
+            log_message "Removing $SNAPSHOT_ROOT..."
 
             rm -Rf --one-file-system "$SNAPSHOT_ROOT"
 
@@ -134,8 +130,4 @@ for TARGET_FILE in `get_targets`; do
 
 done
 
-# kill subshells if the main process is terminated
-trap '{ log_message "Snapshot thinning interrupted."; kill $(jobs -p); }' SIGINT SIGTERM
-
-wait && log_message "Thinning complete."
 
