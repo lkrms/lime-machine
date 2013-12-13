@@ -19,8 +19,8 @@ fi
 
 . "$CONFIG_DIR/settings"
 
-mkdir -p `dirname "$LOG_FILE"` || echo "Error: $(dirname "$LOG_FILE") doesn't exist."; exit 0
-test -w "$LOG_FILE" || echo "Error: unable to open $LOG_FILE for writing."; exit 0
+mkdir -p `dirname "$LOG_FILE"` || { echo "Error: $(dirname "$LOG_FILE") doesn't exist."; exit 0; }
+test -w "$LOG_FILE" || { echo "Error: unable to open $LOG_FILE for writing."; exit 0; }
 
 ERROR_LOG=""
 
@@ -38,8 +38,8 @@ function send_error_log {
 
     if [ ! -z "$ERROR_LOG" ]; then
 
-        local SUBJECT="WARNING: Backup errors reported"
-        local MESSAGE="Relevant log entries follow.\n\n$ERROR_LOG"
+        local SUBJECT="WARNING: Backup errors reported on `hostname -s`"
+        local MESSAGE="Relevant log entries follow.\n\n$ERROR_LOG\n"
 
         echo -e "$MESSAGE" | mail -s "$SUBJECT" "$ERROR_EMAIL"
 
