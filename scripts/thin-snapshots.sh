@@ -17,16 +17,21 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-# exit without error if another instance is already running
-if [ "$(pgrep -f "$(basename $0)")" != "$$" ]; then
+trap "" SIGHUP
 
-  echo "Snapshot thinning is already in progress. Terminating."
-  exit 0
-
-fi
+# kill subshells if the main process is terminated
+trap "log_message 'Snapshot thinning interrupted.'; kill 0" SIGINT SIGTERM
 
 SCRIPT_DIR=$(cd "$(dirname "$0")"; pwd)
 . "$SCRIPT_DIR/common.sh"
+
+# exit without error if another instance is already running
+if [ "$(pgrep -f "$(basename $0)")" != "$$" ]; then
+
+  log_message "Snapshot thinning is already in progress. Terminating."
+  exit 0
+
+fi
 
 EXPIRED_TOTAL=0
 
@@ -42,11 +47,11 @@ for TARGET_FILE in `get_targets`; do
 
     check_target || continue
 
-    echo "Found target volume for $TARGET_NAME at $TARGET_MOUNT_POINT. Initiating snapshot thinning for all sources."
+    log_message "Found target volume for $TARGET_NAME at $TARGET_MOUNT_POINT. Initiating snapshot thinning for all sources."
 
     for SOURCE_ROOT in `find "$TARGET_MOUNT_POINT/snapshots" -mindepth 1 -maxdepth 1 -type d ! -name ".empty" ! -name ".pending" | sort`; do
 
-        echo "Looking for expired snapshots in $SOURCE_ROOT..."
+        log_message "Looking for expired snapshots in $SOURCE_ROOT..."
 
         SNAPSHOTS=(`find "$SOURCE_ROOT" -mindepth 1 -maxdepth 1 -type d -regextype posix-awk -regex '.*/[0-9]{4}-[0-9]{2}-[0-9]{2}[\-T][0-9]{6}' -exec basename '{}' \; | sort`)
 
@@ -111,7 +116,7 @@ for TARGET_FILE in `get_targets`; do
 
         done
 
-        echo "$SNAPSHOT_COUNT snapshots found. $EXPIRED_COUNT snapshots have expired and will be removed."
+        log_message "$SNAPSHOT_COUNT snapshots found. $EXPIRED_COUNT snapshots have expired and will be removed."
 
     done
 

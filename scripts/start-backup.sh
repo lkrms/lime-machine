@@ -17,6 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+trap "" SIGHUP
+
 SCRIPT_DIR=$(cd "$(dirname "$0")"; pwd)
 . "$SCRIPT_DIR/common.sh"
 
@@ -40,9 +42,6 @@ if [ ! -f "$EXCLUDE_PATH" ]; then
 fi
 
 function do_rsync {
-
-	# just in case huponexit is on
-	trap "" HUP
 
 	local SOURCE=$1; shift
 	local OPTIONS=("$@")
@@ -111,8 +110,6 @@ function do_rsync {
 }
 
 function do_mysql {
-
-	trap "" HUP
 
 	local OPTIONS=()
 
@@ -195,8 +192,6 @@ function do_mysql {
 }
 
 function do_postgres {
-
-	trap "" HUP
 
 	export PGPASSFILE=`mktemp`
 	echo "*:*:*:*:$SOURCE_PASSWORD" > $PGPASSFILE

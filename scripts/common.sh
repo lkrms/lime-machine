@@ -19,6 +19,9 @@ fi
 
 . "$CONFIG_DIR/settings"
 
+mkdir -p `dirname "$LOG_FILE"` || echo "Error: $(dirname "$LOG_FILE") doesn't exist."; exit 0
+test -w "$LOG_FILE" || echo "Error: unable to open $LOG_FILE for writing."; exit 0
+
 ERROR_LOG=""
 
 function log_error {
@@ -30,6 +33,21 @@ function log_error {
     ERROR_LOG="${ERROR_LOG}`log_time` $@\n"
 
 }
+
+function send_error_log {
+
+    if [ ! -z "$ERROR_LOG" ]; then
+
+        local SUBJECT="WARNING: Backup errors reported"
+        local MESSAGE="Relevant log entries follow.\n\n$ERROR_LOG"
+
+        echo -e "$MESSAGE" | mail -s "$SUBJECT" "$ERROR_EMAIL"
+
+    fi
+
+}
+
+trap "send_error_log" EXIT
 
 function log_message {
 
