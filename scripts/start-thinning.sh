@@ -25,7 +25,7 @@ SCRIPT_DIR=$(cd "$(dirname "$0")"; pwd)
 # exit without error if another instance is already running
 if [ "$(pgrep -f "$(basename $0)")" != "$$" ]; then
 
-  log_message "Snapshot thinning is already in progress. Terminating."
+  log_message "Snapshot thinning is already in progress. Ignoring request to start thinning."
   exit 0
 
 fi
@@ -126,6 +126,8 @@ for TARGET_FILE in `get_targets`; do
             rm -Rf --one-file-system "$SNAPSHOT_ROOT"
 
         done
+
+        log_message "Thinning complete for target $TARGET_NAME."
     ) &
 
 done
