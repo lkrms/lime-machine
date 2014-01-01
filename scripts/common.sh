@@ -38,8 +38,10 @@ function send_error_log {
 
     if [ ! -z "$ERROR_LOG" ]; then
 
-        local SUBJECT="WARNING: Backup errors reported on `hostname -s`"
-        local MESSAGE="Relevant log entries follow.\n\n$ERROR_LOG\n"
+        local SUBJECT
+        local MESSAGE
+        SUBJECT="WARNING: Backup errors reported on `hostname -s`"
+        MESSAGE="Relevant log entries follow.\n\n$ERROR_LOG\n"
 
         echo -e "$MESSAGE" | mail -s "$SUBJECT" "$ERROR_EMAIL"
 

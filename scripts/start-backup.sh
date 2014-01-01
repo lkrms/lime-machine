@@ -43,8 +43,11 @@ fi
 
 function do_rsync {
 
-	local SOURCE=$1; shift
-	local OPTIONS=("$@")
+	local SOURCE
+	local OPTIONS
+
+	SOURCE=$1; shift
+	OPTIONS=("$@")
 
 	# properly handle the possibility that RSYNC_OPTIONS isn't an array
 	if [ `declare -p RSYNC_OPTIONS 2>/dev/null | grep -q '^declare \-a'; echo $?` -eq 0 ]; then
@@ -111,7 +114,8 @@ function do_rsync {
 
 function do_mysql {
 
-	local OPTIONS=()
+	local OPTIONS
+	OPTIONS=()
 
 	if [ `declare -p MYSQLDUMP_OPTIONS 2>/dev/null | grep -q '^declare \-a'; echo $?` -eq 0 ]; then
 
