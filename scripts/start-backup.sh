@@ -52,26 +52,26 @@ function do_rsync {
 		# another possibility is that someone tried to clear RSYNC_OPTIONS by assigning an empty string
 		if [ ${#RSYNC_OPTIONS[*]} -ge 1 -a -n "${RSYNC_OPTIONS[0]}" ]; then
 
-			OPTIONS+=("${RSYNC_OPTIONS[@]}")
+			OPTIONS=("${OPTIONS[@]}" "${RSYNC_OPTIONS[@]}")
 
 		fi
 
 	else
 
 	    # the lack of quoting is deliberate; we want arguments to be separated
-	    OPTIONS+=($RSYNC_OPTIONS)
+	    OPTIONS=("${OPTIONS[@]}" $RSYNC_OPTIONS)
 
 	fi
 
 	if [ ! -z "$SOURCE_SECRET" ]; then
 
-		OPTIONS+=(--password-file "$SOURCE_SECRET")
+		OPTIONS=("${OPTIONS[@]}" --password-file "$SOURCE_SECRET")
 
 	fi
 
 	if [ ! -z "$SOURCE_EXCLUDE" ]; then
 
-		OPTIONS+=(--exclude-from "$SOURCE_EXCLUDE")
+		OPTIONS=("${OPTIONS[@]}" --exclude-from "$SOURCE_EXCLUDE")
 
 	fi
 
@@ -117,13 +117,13 @@ function do_mysql {
 
 		if [ ${#MYSQLDUMP_OPTIONS[*]} -ge 1 -a -n "${MYSQLDUMP_OPTIONS[0]}" ]; then
 
-			OPTIONS+=("${MYSQLDUMP_OPTIONS[@]}")
+			OPTIONS=("${OPTIONS[@]}" "${MYSQLDUMP_OPTIONS[@]}")
 
 		fi
 
 	else
 
-	    OPTIONS+=($MYSQLDUMP_OPTIONS)
+	    OPTIONS=("${OPTIONS[@]}" $MYSQLDUMP_OPTIONS)
 
 	fi
 

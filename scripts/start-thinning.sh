@@ -100,7 +100,7 @@ for TARGET_FILE in `get_targets`; do
                 #
                 if [ $(( THIS_GAP + NEXT_GAP )) -lt $MAX_GAP ]; then
 
-                    EXPIRED_SNAPSHOTS+=("$SOURCE_ROOT/$SNAPSHOT")
+                    EXPIRED_SNAPSHOTS=("${EXPIRED_SNAPSHOTS[@]}" "$SOURCE_ROOT/$SNAPSHOT")
                     ACCUM_GAP=$THIS_GAP
                     (( EXPIRED_COUNT++ ))
                     (( EXPIRED_TOTAL++ ))
