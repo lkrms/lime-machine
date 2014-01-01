@@ -24,6 +24,8 @@ Additional source types will be offered in future versions.
 
 lime-machine will cope if `RSYNC_OPTIONS` is a string rather than a array, but for best results, please provide an array. Empty array syntax is simply `()`.
 
+**Note:** By default, lime-machine copies symlinks as symlinks. You should consider adding `--copy-links`, `--copy-unsafe-links` or `--safe-links` to `RSYNC_OPTIONS` if necessary.
+
 ### Example "rsync_ssh" source configuration
 
     SOURCE_TYPE=rsync_ssh
@@ -34,6 +36,8 @@ lime-machine will cope if `RSYNC_OPTIONS` is a string rather than a array, but f
     SSH_PORT=2222
     SSH_KEY=$BACKUP_ROOT/secrets/ssh_private_key
     RSYNC_OPTIONS=()
+
+See above for important notes regarding symlinks.
 
 ### Example "rsync_shadow" source configuration
 
@@ -52,6 +56,8 @@ lime-machine will cope if `RSYNC_OPTIONS` is a string rather than a array, but f
     RSYNC_OPTIONS=()
 
 Shadow copies are mounted under `SHADOW_PATH` on the source server, which the rsync server must offer at `SOURCE_PATH`. Commands to create and delete shadow copies are issued over SSH (simpler Linux-friendly alternatives aren't secure enough).
+
+See above for important notes regarding symlinks.
 
 ### Example "mysql" source configuration
 

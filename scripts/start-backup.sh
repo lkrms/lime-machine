@@ -384,7 +384,7 @@ for TARGET_FILE in `get_targets`; do
 
 				log_message "Attempting rsync backup of '$SOURCE_NAME' to '$TARGET_NAME'..."
 
-				(do_rsync $SOURCE_USER@$SOURCE_HOST::"$SOURCE_PATH/" --copy-unsafe-links &)
+				(do_rsync $SOURCE_USER@$SOURCE_HOST::"$SOURCE_PATH/" &)
 
 				;;
 
@@ -392,7 +392,7 @@ for TARGET_FILE in `get_targets`; do
 
 				log_message "Attempting rsync backup of '$SOURCE_NAME' to '$TARGET_NAME' over SSH..."
 
-				(do_rsync $SSH_USER@$SOURCE_HOST:"$SOURCE_PATH/" --copy-unsafe-links -e "ssh -o StrictHostKeyChecking=no -p $SSH_PORT -i '$SSH_KEY'" &)
+				(do_rsync $SSH_USER@$SOURCE_HOST:"$SOURCE_PATH/" -e "ssh -o StrictHostKeyChecking=no -p $SSH_PORT -i '$SSH_KEY'" &)
 
 				;;
 
@@ -420,7 +420,7 @@ for TARGET_FILE in `get_targets`; do
 					# allow shadow copy to "settle"
 					sleep 5
 
-					(do_rsync $SOURCE_USER@$SOURCE_HOST::"$SOURCE_PATH/$DATE/" --safe-links &)
+					(do_rsync $SOURCE_USER@$SOURCE_HOST::"$SOURCE_PATH/$DATE/" &)
 
 				fi
 
