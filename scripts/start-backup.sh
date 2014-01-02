@@ -26,9 +26,7 @@ EXCLUDE_PATH=$CONFIG_DIR/exclude.always
 
 if [ ! -f "$EXCLUDE_PATH" ]; then
 
-	touch "$EXCLUDE_PATH"
-
-	if [ $? -ne 0 ]; then
+	if ! touch "$EXCLUDE_PATH"; then
 
 		echo "Error: $EXCLUDE_PATH does not exist. Terminating." 1>&2
 		exit 1
@@ -50,7 +48,7 @@ function do_rsync {
 	OPTIONS=("$@")
 
 	# properly handle the possibility that RSYNC_OPTIONS isn't an array
-	if [ `declare -p RSYNC_OPTIONS 2>/dev/null | grep -q '^declare \-a'; echo $?` -eq 0 ]; then
+	if declare -p RSYNC_OPTIONS 2>/dev/null | grep -q '^declare \-a'; then
 
 		# another possibility is that someone tried to clear RSYNC_OPTIONS by assigning an empty string
 		if [ ${#RSYNC_OPTIONS[*]} -ge 1 -a -n "${RSYNC_OPTIONS[0]}" ]; then
@@ -117,7 +115,7 @@ function do_mysql {
 	local OPTIONS
 	OPTIONS=()
 
-	if [ `declare -p MYSQLDUMP_OPTIONS 2>/dev/null | grep -q '^declare \-a'; echo $?` -eq 0 ]; then
+	if declare -p MYSQLDUMP_OPTIONS 2>/dev/null | grep -q '^declare \-a'; then
 
 		if [ ${#MYSQLDUMP_OPTIONS[*]} -ge 1 -a -n "${MYSQLDUMP_OPTIONS[0]}" ]; then
 
