@@ -23,7 +23,7 @@ SCRIPT_DIR=$(cd "$(dirname "$0")"; pwd)
 . "$SCRIPT_DIR/common.sh"
 
 # exit without error if another instance is already running
-if [ "$(pgrep -f "$(basename $0)")" != "$$" ]; then
+if pgrep -f "$(basename "$0")" | grep -qv "$$"; then
 
   log_message "Snapshot thinning is already in progress. Ignoring request to start thinning."
   exit 0
