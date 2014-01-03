@@ -50,7 +50,7 @@ for TARGET_FILE in `get_targets`; do
 
         log_message "Looking for expired snapshots in $SOURCE_ROOT..."
 
-        SNAPSHOTS=(`find "$SOURCE_ROOT" -mindepth 1 -maxdepth 1 -type d -regextype posix-awk -regex '.*/[0-9]{4}-[0-9]{2}-[0-9]{2}[\-T][0-9]{6}' -exec basename '{}' \; | sort`)
+        SNAPSHOTS=(`find "$SOURCE_ROOT" -mindepth 1 -maxdepth 1 -type d -regex '.*/[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][-T][0-9][0-9][0-9][0-9][0-9][0-9]' -exec basename '{}' \; | sort`)
 
         SNAPSHOT_COUNT=${#SNAPSHOTS[@]}
         EXPIRED_COUNT=0
