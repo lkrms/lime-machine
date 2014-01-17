@@ -30,17 +30,17 @@ CYG_MIRROR=
 
 if [ ! -z "$PROXY_SERVICE" ]; then
 
-    CYG_PROXY="--proxy $PROXY_SERVICE"
+    CYG_PROXY="--proxy `escape_for_sed $PROXY_SERVICE`"
 
 fi
 
 if [ ! -z "$CYGWIN_MIRROR" ]; then
 
-    CYG_MIRROR="--site $CYGWIN_MIRROR --only-site"
+    CYG_MIRROR="--site `escape_for_sed $CYGWIN_MIRROR` --only-site"
 
 fi
 
-sed "s/{PROXY}/$CYG_PROXY/g;s/{MIRROR}/$CYG_MIRROR/g;s/{LOCALCACHE}/$CYGWIN_PACKAGE_ROOT/g" $BACKUP_ROOT/vss/install_cygwin.cmd.template > $BACKUP_ROOT/vss/install_cygwin.cmd
+sed "s/{PROXY}/$CYG_PROXY/g;s/{MIRROR}/$CYG_MIRROR/g;s/{LOCALCACHE}/`escape_for_sed $CYGWIN_PACKAGE_ROOT`/g" $BACKUP_ROOT/vss/install_cygwin.cmd.template > $BACKUP_ROOT/vss/install_cygwin.cmd
 
 log_message "Cygwin installation script updated."
 

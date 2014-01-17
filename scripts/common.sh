@@ -73,6 +73,12 @@ function log_source {
 
 }
 
+function escape_for_sed {
+
+    echo "$@" | sed 's/[\/&]/\\&/g'
+
+}
+
 function snapshot2date {
 
     echo "${1:0:10} ${1:11:2}:${1:13:2}:${1:15:2}"
