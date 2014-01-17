@@ -23,6 +23,8 @@ else
 
 fi
 
+log_message "Cygwin installers successfully updated."
+
 CYGWIN_PROXY=
 
 if [ ! -z "$PROXY_SERVICE" ]; then

@@ -1,15 +1,19 @@
 @echo off
 
-set installer_dir=%~sdp0
+set installer_dir=%~dp0
 
 pushd "%TEMP%"
 
 set arch=x86
 if "%PROCESSOR_ARCHITECTURE%"=="AMD64" set arch=x86_64
 
-for /f "usebackq delims=!" %%D in (`cd`) do set working_dir=%%~sD
+set installer_name=setup-%arch%.exe
 
-cmd /c %installer_dir%cygwin\setup-%arch%.exe --local-install --site http://mirror.aarnet.edu.au/pub/sourceware/cygwin/ --only-site {PROXY} --root C:\cygwin --packages openssh,rsync,cygrunsrv --arch %arch% --quiet-mode --local-package-dir %working_dir%
+copy /y "%installer_dir%cygwin\%installer_name%" .
+
+cmd /c .\%installer_name% --local-install --site http://mirror.aarnet.edu.au/pub/sourceware/cygwin/ --only-site {PROXY} --root C:\cygwin --packages openssh,rsync,cygrunsrv --arch %arch% --quiet-mode
 
 popd
+
+pause
 
