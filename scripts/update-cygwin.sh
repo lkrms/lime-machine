@@ -27,7 +27,7 @@ CYGWIN_PROXY=
 
 if [ ! -z "$PROXY_SERVICE" ]; then
 
-    CYGWIN_PROXY=$PROXY_SERVICE
+    CYGWIN_PROXY="--proxy $PROXY_SERVICE"
 
 fi
 

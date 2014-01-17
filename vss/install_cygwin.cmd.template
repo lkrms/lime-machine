@@ -5,9 +5,9 @@ pushd "%~dp0"
 set arch=x86
 if "%PROCESSOR_ARCHITECTURE%"=="AMD64" set arch=x86_64
 
-for /f "usebackq delims=!" %%D in (`cd`) do set working_dir=%%~sD
+rem for /f "usebackq delims=!" %%D in (`cd`) do set working_dir=%%~sD
 
-cmd /c setup-%arch%.exe --local-install --site http://mirror.aarnet.edu.au/pub/sourceware/cygwin/ --only-site {PROXY} --root C:\cygwin --packages openssh,rsync,cygrunsrv --arch %arch% --quiet-mode --local-package-dir %working_dir%
+cmd /c cygwin\setup-%arch%.exe --local-install --site http://mirror.aarnet.edu.au/pub/sourceware/cygwin/ --only-site {PROXY} --root C:\cygwin --packages openssh,rsync,cygrunsrv --arch %arch% --quiet-mode --local-package-dir %TEMP%
 
 popd
 
