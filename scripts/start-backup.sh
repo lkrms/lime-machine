@@ -39,7 +39,7 @@ if [ ! -f "$EXCLUDE_PATH" ]; then
 
 fi
 
-sed "s/{HOSTNAME}/$(hostname -s)/g" $BACKUP_ROOT/vss/create_copy.cmd.template > $BACKUP_ROOT/vss/create_copy.cmd
+sed "s/{HOSTNAME}/$(hostname -s)/g" $BACKUP_ROOT/vss/.create_copy.cmd.template > $BACKUP_ROOT/vss/create_copy.cmd
 
 function do_rsync {
 

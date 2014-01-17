@@ -40,7 +40,7 @@ if [ ! -z "$CYGWIN_MIRROR" ]; then
 
 fi
 
-sed "s/{PROXY}/$CYG_PROXY/g;s/{MIRROR}/$CYG_MIRROR/g;s/{LOCALCACHE}/`escape_for_sed $CYGWIN_PACKAGE_ROOT`/g" $BACKUP_ROOT/vss/install_cygwin.cmd.template > $BACKUP_ROOT/vss/install_cygwin.cmd
+sed "s/{PROXY}/$CYG_PROXY/g;s/{MIRROR}/$CYG_MIRROR/g;s/{LOCALCACHE}/`escape_for_sed $CYGWIN_PACKAGE_ROOT`/g" $BACKUP_ROOT/vss/.install_cygwin.cmd.template > $BACKUP_ROOT/vss/install_cygwin.cmd
 
 log_message "Cygwin installation script updated."
 
