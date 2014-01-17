@@ -22,6 +22,13 @@ fi
 mkdir -p `dirname "$LOG_FILE"` || { echo "Error: $(dirname "$LOG_FILE") doesn't exist."; exit 0; }
 touch "$LOG_FILE" || { echo "Error: unable to open $LOG_FILE for writing."; exit 0; }
 
+if [ ! -z "$PROXY_SERVICE" ]; then
+
+    export http_proxy=http://$PROXY_SERVICE
+    export https_proxy=$http_proxy
+
+fi
+
 ERROR_LOG=""
 
 function log_error {

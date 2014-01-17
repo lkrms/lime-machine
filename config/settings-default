@@ -7,3 +7,6 @@ NOTIFY_EMAIL="root"
 # Make sure the relevant user can write to this file.
 LOG_FILE="$BACKUP_ROOT/log/lime-machine.log"
 
+# e.g. proxy.mydomain.net:8080
+PROXY_SERVICE=""
+
