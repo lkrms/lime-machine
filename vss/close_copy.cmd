@@ -13,7 +13,15 @@ set CLOSE_SCRIPT_PATH=%MOUNT_ROOT%\%COPY_REF%-close.cmd
 set COPY_ROOT=%MOUNT_ROOT%\%COPY_REF%
 
 rem Needed to escape cygwin's 32-bit sandbox.
-%WINDIR%\Sysnative\cmd.exe /c %CLOSE_SCRIPT_PATH%
+if exist %WINDIR%\Sysnative\cmd.exe (
+
+    %WINDIR%\Sysnative\cmd.exe /c %CLOSE_SCRIPT_PATH%
+
+) else (
+
+    %WINDIR%\System32\cmd.exe /c %CLOSE_SCRIPT_PATH%
+
+)
 
 if errorlevel 0 (
 

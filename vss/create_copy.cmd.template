@@ -51,6 +51,14 @@ goto whileVol
 :endWhileVol
 
 rem Needed to escape cygwin's 32-bit sandbox.
-%WINDIR%\Sysnative\cmd.exe /c %VSHADOW_PATH% -p -script=%VARS_SCRIPT_PATH% -exec=%MOUNT_SCRIPT_PATH% %VOLUMES%
+if exist %WINDIR%\Sysnative\cmd.exe (
+
+    %WINDIR%\Sysnative\cmd.exe /c %VSHADOW_PATH% -p -script=%VARS_SCRIPT_PATH% -exec=%MOUNT_SCRIPT_PATH% %VOLUMES%
+
+) else (
+
+    %WINDIR%\System32\cmd.exe /c %VSHADOW_PATH% -p -script=%VARS_SCRIPT_PATH% -exec=%MOUNT_SCRIPT_PATH% %VOLUMES%
+
+)
 
 exit /b %errorlevel%
