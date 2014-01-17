@@ -7,11 +7,7 @@ pushd "%TEMP%"
 set arch=x86
 if "%PROCESSOR_ARCHITECTURE%"=="AMD64" set arch=x86_64
 
-set installer_name=setup-%arch%.exe
-
-copy /y "%installer_dir%cygwin\%installer_name%" .
-
-cmd /c .\%installer_name% --local-install --site http://mirror.aarnet.edu.au/pub/sourceware/cygwin/ --only-site {PROXY} --root C:\cygwin --packages openssh,rsync,cygrunsrv --arch %arch% --quiet-mode
+cmd /c %installer_dir%cygwin\setup-%arch%.exe --local-package-dir {LOCALCACHE} {PROXY} {MIRROR} --root C:\cygwin --packages openssh,rsync,cygrunsrv --arch %arch% --quiet-mode
 
 popd
 

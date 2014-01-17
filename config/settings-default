@@ -7,6 +7,14 @@ NOTIFY_EMAIL="root"
 # Make sure the relevant user can write to this file.
 LOG_FILE="$BACKUP_ROOT/log/lime-machine.log"
 
-# e.g. proxy.mydomain.net:8080
+# Used for Cygwin downloads.
+#PROXY_SERVICE="proxy.mydomain.net:3128"
 PROXY_SERVICE=""
+
+# If not provided, the Cygwin installer will choose a mirror, significantly reducing your cache hit rate.
+#CYGWIN_MIRROR="http://mirror.aarnet.edu.au/pub/sourceware/cygwin/"
+CYGWIN_MIRROR=""
+
+# Where should Cygwin downloads be stored on clients? REQUIRED (if using Cygwin).
+CYGWIN_PACKAGE_ROOT="C:\\cygwin.cache"
 

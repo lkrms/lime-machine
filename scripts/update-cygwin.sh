@@ -25,13 +25,22 @@ fi
 
 log_message "Cygwin installers successfully updated."
 
-CYGWIN_PROXY=
+CYG_PROXY=
+CYG_MIRROR=
 
 if [ ! -z "$PROXY_SERVICE" ]; then
 
-    CYGWIN_PROXY="--proxy $PROXY_SERVICE"
+    CYG_PROXY="--proxy $PROXY_SERVICE"
 
 fi
 
-sed "s/{PROXY}/$CYGWIN_PROXY/g" $BACKUP_ROOT/vss/install_cygwin.cmd.template > $BACKUP_ROOT/vss/install_cygwin.cmd
+if [ ! -z "$CYGWIN_MIRROR" ]; then
+
+    CYG_MIRROR="--site $CYGWIN_MIRROR --only-site"
+
+fi
+
+sed "s/{PROXY}/$CYG_PROXY/g;s/{MIRROR}/$CYG_MIRROR/g;s/{LOCALCACHE}/$CYGWIN_PACKAGE_ROOT/g" $BACKUP_ROOT/vss/install_cygwin.cmd.template > $BACKUP_ROOT/vss/install_cygwin.cmd
+
+log_message "Cygwin installation script updated."
 
