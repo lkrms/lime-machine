@@ -264,7 +264,7 @@ function do_finalise {
 
 			log_source "Closing shadow copy."
 
-			ssh -o StrictHostKeyChecking=no -p $SSH_PORT -i "$SSH_KEY" "$SSH_USER@$SOURCE_HOST" "//`hostname -s`/vss/close_copy.cmd $SHADOW_PATH $DATE" > $TEMP_FILE 2>&1
+			ssh -F "$SCRIPT_DIR/ssh_config" -p $SSH_PORT -i "$SSH_KEY" "$SSH_USER@$SOURCE_HOST" "//`hostname -s`/vss/close_copy.cmd $SHADOW_PATH $DATE" > $TEMP_FILE 2>&1
 
 			STATUS=$?
 			ERR=`< $TEMP_FILE`
@@ -392,7 +392,7 @@ for TARGET_FILE in `get_targets`; do
 
 				log_message "Attempting rsync backup of '$SOURCE_NAME' to '$TARGET_NAME' over SSH..."
 
-				(do_rsync $SSH_USER@$SOURCE_HOST:"$SOURCE_PATH/" -e "ssh -o StrictHostKeyChecking=no -p $SSH_PORT -i '$SSH_KEY'" &)
+				(do_rsync $SSH_USER@$SOURCE_HOST:"$SOURCE_PATH/" -e "ssh -F '$SCRIPT_DIR/ssh_config' -p $SSH_PORT -i '$SSH_KEY'" &)
 
 				;;
 
@@ -402,7 +402,7 @@ for TARGET_FILE in `get_targets`; do
 
 				log_source "Creating shadow copy."
 
-				ssh -o StrictHostKeyChecking=no -p $SSH_PORT -i "$SSH_KEY" "$SSH_USER@$SOURCE_HOST" "//`hostname -s`/vss/create_copy.cmd $SHADOW_PATH $DATE $SHADOW_VOLUMES" > $TEMP_FILE 2>&1
+				ssh -F "$SCRIPT_DIR/ssh_config" -p $SSH_PORT -i "$SSH_KEY" "$SSH_USER@$SOURCE_HOST" "//`hostname -s`/vss/create_copy.cmd $SHADOW_PATH $DATE $SHADOW_VOLUMES" > $TEMP_FILE 2>&1
 
 				STATUS=$?
 				ERR=`< $TEMP_FILE`
