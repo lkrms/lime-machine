@@ -288,6 +288,16 @@ function do_finalise {
 
 	rm $TEMP_FILE
 
+	if [ $SHUTDOWN_AFTER_BACKUP -eq 1 ]; then
+
+		if ! pidof -x -o $$,$PPID,$SCRIPT_PPID $SCRIPT_NAME >/dev/null; then
+
+			$SHUTDOWN_COMMAND
+
+		fi
+
+	fi
+
 }
 
 for TARGET_FILE in `get_targets`; do

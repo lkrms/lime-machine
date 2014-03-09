@@ -9,6 +9,8 @@ fi
 
 BACKUP_ROOT=$(cd "$SCRIPT_DIR/.."; pwd)
 CONFIG_DIR=$BACKUP_ROOT/config
+SCRIPT_NAME=$(basename "$0")
+SCRIPT_PPID=$PPID
 
 if [ ! -f "$CONFIG_DIR/settings" ]; then
 

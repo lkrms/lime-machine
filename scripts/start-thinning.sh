@@ -23,7 +23,7 @@ SCRIPT_DIR=$(cd "$(dirname "$0")"; pwd)
 . "$SCRIPT_DIR/common.sh"
 
 # exit without error if another instance is already running
-if pgrep -f "$(basename "$0")" | grep -qv "$$"; then
+if pidof -x -o $$,$PPID "$(basename "$0")" >/dev/null; then
 
   log_message "Snapshot thinning is already in progress. Ignoring request to start thinning."
   exit 0
@@ -123,7 +123,9 @@ for TARGET_FILE in `get_targets`; do
 
             log_message "Removing $SNAPSHOT_ROOT..."
 
-            rm -Rf --one-file-system "$SNAPSHOT_ROOT"
+            #rm -Rf --one-file-system "$SNAPSHOT_ROOT"
+            rm -Rf "$SNAPSHOT_ROOT"
+
 
         done
 
