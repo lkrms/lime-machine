@@ -26,14 +26,14 @@ EXCLUDE_PATH=$CONFIG_DIR/exclude.always
 
 if [ ! -f "$EXCLUDE_PATH" ]; then
 
-	if ! touch "$EXCLUDE_PATH"; then
+	if ! cp "$CONFIG_DIR/exclude.always-default" "$EXCLUDE_PATH"; then
 
 		echo "Error: $EXCLUDE_PATH does not exist. Terminating." 1>&2
 		exit 1
 
 	else
 
-		echo "Warning: $EXCLUDE_PATH did not exist, so it was created without content." 1>&2
+		echo "Warning: $EXCLUDE_PATH did not exist, so default exclusions were applied." 1>&2
 
 	fi
 
@@ -352,6 +352,7 @@ for TARGET_FILE in `get_targets`; do
 		SOURCE_PASSWORD=
 		SOURCE_EXCLUDE=
 		SOURCE_PORT=
+		SOURCE_SUB_PATH=
 		SSH_USER=
 		SSH_PORT=
 		SSH_KEY=
@@ -430,7 +431,7 @@ for TARGET_FILE in `get_targets`; do
 					# allow shadow copy to "settle"
 					sleep 5
 
-					(do_rsync $SOURCE_USER@$SOURCE_HOST::"$SOURCE_PATH/$DATE/" &)
+					(do_rsync $SOURCE_USER@$SOURCE_HOST::"$SOURCE_PATH/$DATE$SOURCE_SUB_PATH/" &)
 
 				fi
 

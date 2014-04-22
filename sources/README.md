@@ -47,6 +47,7 @@ See above for important notes regarding symlinks.
     SOURCE_USER=rsync_user
     SOURCE_SECRET=$BACKUP_ROOT/secrets/rsync_password
     SOURCE_EXCLUDE=$BACKUP_ROOT/sources/server.exclude
+    SOURCE_SUB_PATH=/D
     SSH_USER=ssh_user
     SSH_PORT=2222
     SSH_KEY=$BACKUP_ROOT/secrets/ssh_private_key
@@ -56,6 +57,8 @@ See above for important notes regarding symlinks.
     RSYNC_OPTIONS=()
 
 Shadow copies are mounted under `SHADOW_PATH` on the source server, which the rsync server must offer at `SOURCE_PATH`. Commands to create and delete shadow copies are issued over SSH (simpler Linux-friendly alternatives aren't secure enough).
+
+`SOURCE_SUB_PATH` is optional. It allows copying only one volume/folder from your shadow copy set.
 
 See above for important notes regarding symlinks.
 
