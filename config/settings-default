@@ -7,10 +7,13 @@ NOTIFY_EMAIL="root"
 # Make sure the relevant user can write to this file.
 LOG_FILE="$BACKUP_ROOT/log/lime-machine.log"
 
+# ...and to this directory.
+RUN_DIR="$BACKUP_ROOT/run"
+
 # Set this to 1 to shut down after each backup operation.
 SHUTDOWN_AFTER_BACKUP=0
 
-# By default, shut down after 2 minutes. ReadyNAS users might prefer "/frontview/bin/autopoweroff".
+# By default, shut down after 2 minutes.
 SHUTDOWN_COMMAND="sudo /sbin/shutdown -h -t 120"
 
 # Used for Cygwin downloads.

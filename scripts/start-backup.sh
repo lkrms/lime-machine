@@ -262,23 +262,62 @@ function do_finalise {
 
 		if [ $SOURCE_TYPE = "rsync_shadow" ]; then
 
-			log_source "Closing shadow copy."
+			# don't close this shadow copy while there's still a chance another process will need it
+			while [ ! -f "${RUN_DIR}/batch_started_${BATCH_DATE}_${SCRIPT_PPID}" ]; do
 
-			ssh -F "$SCRIPT_DIR/ssh_config" -p $SSH_PORT -i "$SSH_KEY" "$SSH_USER@$SOURCE_HOST" "//`hostname -s`/vss/close_copy.cmd $SHADOW_PATH $DATE" > $TEMP_FILE 2>&1
+				sleep 30
 
-			STATUS=$?
-			ERR=`< $TEMP_FILE`
+			done
 
-			log_source "Returned from close_copy.cmd. Output:\n\n$ERR\n\nExit status: $STATUS\n"
+			# give other rsync processes one last chance to spawn
+			sleep 10
 
-			if [ $STATUS -ne 0 ]; then
+			# TODO: escape SOURCE_HOST properly
+			if ! pgrep -f '/rsync.*@'$SOURCE_HOST'::.*'$SHADOW_DATE >/dev/null; then
 
-				SUBJECT="WARNING: $SUBJECT"
-				MESSAGE="Unable to close shadow copy. Exit status: $STATUS.\n\nOutput collected from stderr is below.\n\n$ERR"
+				if [ ! -f "${RUN_DIR}/rsync_shadow_closed_${SOURCE_NAME}_${SHADOW_DATE}" ]; then
 
-				echo -e "$MESSAGE" | mail -s "$SUBJECT" "$ERROR_EMAIL"
+					exec 200>"${RUN_DIR}/rsync_shadow_closing_${SOURCE_NAME}_${SHADOW_DATE}"
 
-				log_source "Error notification sent:\n\nTo: $ERROR_EMAIL\nSubject: $SUBJECT\nMessage:\n$MESSAGE.\n"
+					if flock -n 200; then
+
+						log_source "Closing shadow copy."
+
+						touch "${RUN_DIR}/rsync_shadow_closed_${SOURCE_NAME}_${SHADOW_DATE}"
+
+						ssh -F "$SCRIPT_DIR/ssh_config" -p $SSH_PORT -i "$SSH_KEY" "$SSH_USER@$SOURCE_HOST" "//`hostname -s`/vss/close_copy.cmd $SHADOW_PATH $DATE" > $TEMP_FILE 2>&1
+
+						STATUS=$?
+						ERR=`< $TEMP_FILE`
+
+						log_source "Returned from close_copy.cmd. Output:\n\n$ERR\n\nExit status: $STATUS\n"
+
+						if [ $STATUS -ne 0 ]; then
+
+							SUBJECT="WARNING: $SUBJECT"
+							MESSAGE="Unable to close shadow copy. Exit status: $STATUS.\n\nOutput collected from stderr is below.\n\n$ERR"
+
+							echo -e "$MESSAGE" | mail -s "$SUBJECT" "$ERROR_EMAIL"
+
+							log_source "Error notification sent:\n\nTo: $ERROR_EMAIL\nSubject: $SUBJECT\nMessage:\n$MESSAGE.\n"
+
+						fi
+
+					else
+
+						log_source "Shadow copy being closed by another process."
+
+					fi
+
+				else
+
+					log_source "Shadow copy already closed or being closed."
+
+				fi
+
+			else
+
+				log_source "Shadow copy still in use by another process. Leaving it open."
 
 			fi
 
@@ -300,11 +339,18 @@ function do_finalise {
 
 }
 
+# declare SHADOW_COPIES as an associative array - Bash 4+ only
+declare -A SHADOW_COPIES
+
+BATCH_DATE=`date "+%Y-%m-%d-%H%M%S"`
+
 for TARGET_FILE in `get_targets`; do
 
 	TARGET_NAME=`basename "$TARGET_FILE"`
 	TARGET_MOUNT_POINT=
 	TARGET_MOUNT_CHECK=1
+    TARGET_ATTEMPT_MOUNT=0
+    TARGET_UNMOUNT=0
 
 	. "$TARGET_FILE"
 
@@ -323,7 +369,7 @@ for TARGET_FILE in `get_targets`; do
 
 	else
 
-		SOURCE_FILES=`find "$BACKUP_ROOT/active-sources" \( -type f -o -type l \) \! -iname ".*" \! -iname "README.*"`
+		SOURCE_FILES=`get_sources`
 
 	fi
 
@@ -411,29 +457,42 @@ for TARGET_FILE in `get_targets`; do
 
 				log_message "Attempting rsync backup of '$SOURCE_NAME' to '$TARGET_NAME' with shadow copy..."
 
-				log_source "Creating shadow copy."
+				SHADOW_DATE=${SHADOW_COPIES[$SOURCE_NAME]}
 
-				ssh -F "$SCRIPT_DIR/ssh_config" -p $SSH_PORT -i "$SSH_KEY" "$SSH_USER@$SOURCE_HOST" "//`hostname -s`/vss/create_copy.cmd $SHADOW_PATH $DATE $SHADOW_VOLUMES" > $TEMP_FILE 2>&1
+				if [ -z "$SHADOW_DATE" ]; then
 
-				STATUS=$?
-				ERR=`< $TEMP_FILE`
+					log_source "Creating shadow copy."
 
-				log_source "Returned from create_copy.cmd. Output:\n\n$ERR\n\nExit status: $STATUS\n"
+					ssh -F "$SCRIPT_DIR/ssh_config" -p $SSH_PORT -i "$SSH_KEY" "$SSH_USER@$SOURCE_HOST" "//`hostname -s`/vss/create_copy.cmd $SHADOW_PATH $DATE $SHADOW_VOLUMES" > $TEMP_FILE 2>&1
 
-				if [ $STATUS -ne 0 ]; then
+					STATUS=$?
+					ERR=`< $TEMP_FILE`
 
-					SUBJECT="FAILURE: $SUBJECT"
-					MESSAGE="Unable to create shadow copy. Exit status: $STATUS.\n\nOutput collected from stderr is below.\n\n$ERR"
-					do_finalise
+					log_source "Returned from create_copy.cmd. Output:\n\n$ERR\n\nExit status: $STATUS\n"
+
+					if [ $STATUS -ne 0 ]; then
+
+						SUBJECT="FAILURE: $SUBJECT"
+						MESSAGE="Unable to create shadow copy. Exit status: $STATUS.\n\nOutput collected from stderr is below.\n\n$ERR"
+						do_finalise
+
+					else
+
+						SHADOW_DATE=$DATE
+						SHADOW_COPIES[$SOURCE_NAME]=$DATE
+
+						# allow shadow copy to "settle"
+						sleep 5
+
+					fi
 
 				else
 
-					# allow shadow copy to "settle"
-					sleep 5
-
-					(do_rsync $SOURCE_USER@$SOURCE_HOST::"$SOURCE_PATH/$DATE$SOURCE_SUB_PATH/" &)
+					log_source "Using shadow copy created earlier (${SHADOW_DATE})."
 
 				fi
+
+				(do_rsync $SOURCE_USER@$SOURCE_HOST::"$SOURCE_PATH/$SHADOW_DATE$SOURCE_SUB_PATH/" &)
 
 				;;
 
@@ -464,4 +523,6 @@ for TARGET_FILE in `get_targets`; do
 	done
 
 done
+
+touch "${RUN_DIR}/batch_started_${BATCH_DATE}_${SCRIPT_PPID}"
 

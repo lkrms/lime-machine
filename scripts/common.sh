@@ -7,6 +7,8 @@ if [ -z "$SCRIPT_DIR" ]; then
 
 fi
 
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
 BACKUP_ROOT=$(cd "$SCRIPT_DIR/.."; pwd)
 CONFIG_DIR=$BACKUP_ROOT/config
 SCRIPT_NAME=$(basename "$0")
@@ -23,6 +25,7 @@ fi
 
 mkdir -p `dirname "$LOG_FILE"` || { echo "Error: $(dirname "$LOG_FILE") doesn't exist."; exit 0; }
 touch "$LOG_FILE" || { echo "Error: unable to open $LOG_FILE for writing."; exit 0; }
+touch "$RUN_DIR" || { echo "Error: unable to write to $RUN_DIR."; exit 0; }
 
 if [ ! -z "$PROXY_SERVICE" ]; then
 
@@ -141,12 +144,32 @@ function check_target {
 
     if [ $TARGET_MOUNT_CHECK -eq 1 -a `stat --format=%d "$TARGET_MOUNT_POINT"` = `stat --format=%d "$TARGET_MOUNT_POINT/.."` ]; then
 
-        log_message "Nothing mounted at $TARGET_MOUNT_POINT for target $TARGET_NAME. Ignoring this target."
-        return 1
+        if [ $TARGET_ATTEMPT_MOUNT -eq 1 ]; then
+
+            if ! mount "$TARGET_MOUNT_POINT"; then
+
+                log_message "Unable to mount a filesystem at $TARGET_MOUNT_POINT for target $TARGET_NAME. Ignoring this target."
+                return 1
+
+            fi
+
+        else
+
+            log_message "Nothing mounted at $TARGET_MOUNT_POINT for target $TARGET_NAME. Ignoring this target."
+            return 1
+
+        fi
+
 
     fi
 
     return 0
+
+}
+
+function get_sources {
+
+    echo -n `find "$BACKUP_ROOT/active-sources" \( -type f -o -type l \) \! -iname ".*" \! -iname "README.*" | sort`
 
 }
 
