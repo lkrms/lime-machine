@@ -273,7 +273,7 @@ function do_finalise {
 			sleep 10
 
 			# TODO: escape SOURCE_HOST properly
-			if ! pgrep -f '/rsync.*@'$SOURCE_HOST'::.*'$SHADOW_DATE >/dev/null; then
+			if ! pgrep -f '\<rsync.*@'$SOURCE_HOST'::.*'$SHADOW_DATE >/dev/null; then
 
 				if [ ! -f "${RUN_DIR}/rsync_shadow_closed_${SOURCE_NAME}_${SHADOW_DATE}" ]; then
 
