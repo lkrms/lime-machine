@@ -285,7 +285,7 @@ function do_finalise {
 
 						touch "${RUN_DIR}/rsync_shadow_closed_${SOURCE_NAME}_${SHADOW_DATE}"
 
-						ssh -F "$SCRIPT_DIR/ssh_config" -p $SSH_PORT -i "$SSH_KEY" "$SSH_USER@$SOURCE_HOST" "//`hostname -s`/vss/close_copy.cmd $SHADOW_PATH $DATE" > $TEMP_FILE 2>&1
+						ssh -F "$SCRIPT_DIR/ssh_config" -p $SSH_PORT -i "$SSH_KEY" "$SSH_USER@$SOURCE_HOST" "//`hostname -s`/vss/close_copy.cmd $SHADOW_PATH $SHADOW_DATE" > $TEMP_FILE 2>&1
 
 						STATUS=$?
 						ERR=`< $TEMP_FILE`
