@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # lime-machine: Linux backup software inspired by Time Machine on OS X.
-# Copyright (c) 2013 Luke Arms
+# Copyright (c) 2013-2014 Luke Arms
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,15 +17,19 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+# ignore HUP signals
 trap "" SIGHUP
 
+# source shared functions, variables, etc.
 SCRIPT_DIR=$(cd "$(dirname "$0")"; pwd)
 . "$SCRIPT_DIR/common.sh"
 
 EXCLUDE_PATH=$CONFIG_DIR/exclude.always
 
+# check for the existence of exclude.always
 if [ ! -f "$EXCLUDE_PATH" ]; then
 
+	# attempt to create it if needed
 	if ! cp "$CONFIG_DIR/exclude.always-default" "$EXCLUDE_PATH"; then
 
 		echo "Error: $EXCLUDE_PATH does not exist. Terminating." 1>&2
@@ -39,18 +43,51 @@ if [ ! -f "$EXCLUDE_PATH" ]; then
 
 fi
 
+# create/update our server-specific shadow copy creation script
 sed "s/{HOSTNAME}/$(hostname -s)/g" $BACKUP_ROOT/vss/.create_copy.cmd.template > $BACKUP_ROOT/vss/create_copy.cmd
+
+# rsync source paths may be singular (a string) or multiple (an array).
+# This function takes a user-defined source path (in the $SOURCE_PATH or $SOURCE_SUB_PATH global) and outputs a string ready for use in an rsync command.
+# If present, the value of the first parameter is prepended to each path in the final string.
+function sanitise_rsync_source {
+
+	local SOURCE SOURCE_VAR=SOURCE_PATH PREFIX=$1 SANITISED=
+
+	if [ $SOURCE_TYPE = "rsync_shadow" ]; then
+
+		SOURCE_VAR=SOURCE_SUB_PATH
+
+	fi
+
+	if declare -p $SOURCE_VAR 2>/dev/null | grep -q '^declare -a'; then
+
+		for SOURCE in ${!SOURCE_VAR}; do
+
+			SANITISED="$SANITISED ${PREFIX}${SOURCE}"
+
+		done;
+
+	else
+
+		# singular sources get a trailing slash (saves one level of directory nesting)
+		SANITISED=${PREFIX}${!SOURCE_VAR}/
+
+	fi
+
+	# remove a leading space (i.e. if added by the loop above)
+	echo -n $SANITISED | sed 's/^ //'
+
+}
 
 function do_rsync {
 
-	local SOURCE
-	local OPTIONS
+	local SOURCE=$1 OPTIONS
 
-	SOURCE=$1; shift
+	shift
 	OPTIONS=("$@")
 
 	# properly handle the possibility that RSYNC_OPTIONS isn't an array
-	if declare -p RSYNC_OPTIONS 2>/dev/null | grep -q '^declare \-a'; then
+	if declare -p RSYNC_OPTIONS 2>/dev/null | grep -q '^declare -a'; then
 
 		# another possibility is that someone tried to clear RSYNC_OPTIONS by assigning an empty string
 		if [ ${#RSYNC_OPTIONS[*]} -ge 1 -a -n "${RSYNC_OPTIONS[0]}" ]; then
@@ -114,10 +151,9 @@ function do_rsync {
 
 function do_mysql {
 
-	local OPTIONS
-	OPTIONS=()
+	local OPTIONS=()
 
-	if declare -p MYSQLDUMP_OPTIONS 2>/dev/null | grep -q '^declare \-a'; then
+	if declare -p MYSQLDUMP_OPTIONS 2>/dev/null | grep -q '^declare -a'; then
 
 		if [ ${#MYSQLDUMP_OPTIONS[*]} -ge 1 -a -n "${MYSQLDUMP_OPTIONS[0]}" ]; then
 
@@ -390,6 +426,9 @@ for TARGET_FILE in `get_targets`; do
 
 		SOURCE_NAME=`basename "$SOURCE_FILE"`
 
+		unset SOURCE_PATH
+		unset SOURCE_SUB_PATH
+
 		SOURCE_TYPE=
 		SOURCE_HOST=
 		SOURCE_PATH=
@@ -441,7 +480,7 @@ for TARGET_FILE in `get_targets`; do
 
 				log_message "Attempting rsync backup of '$SOURCE_NAME' to '$TARGET_NAME'..."
 
-				(do_rsync $SOURCE_USER@$SOURCE_HOST::"$SOURCE_PATH/" &)
+				(do_rsync $SOURCE_USER@$SOURCE_HOST::"`sanitise_rsync_source`" &)
 
 				;;
 
@@ -449,7 +488,7 @@ for TARGET_FILE in `get_targets`; do
 
 				log_message "Attempting rsync backup of '$SOURCE_NAME' to '$TARGET_NAME' over SSH..."
 
-				(do_rsync $SSH_USER@$SOURCE_HOST:"$SOURCE_PATH/" -e "ssh -F '$SCRIPT_DIR/ssh_config' -p $SSH_PORT -i '$SSH_KEY'" &)
+				(do_rsync $SSH_USER@$SOURCE_HOST:"`sanitise_rsync_source`" -e "ssh -F '$SCRIPT_DIR/ssh_config' -p $SSH_PORT -i '$SSH_KEY'" &)
 
 				;;
 
@@ -492,7 +531,7 @@ for TARGET_FILE in `get_targets`; do
 
 				fi
 
-				(do_rsync $SOURCE_USER@$SOURCE_HOST::"$SOURCE_PATH/$SHADOW_DATE$SOURCE_SUB_PATH/" &)
+				(do_rsync $SOURCE_USER@$SOURCE_HOST::"$(sanitise_rsync_source "$SOURCE_PATH/$SHADOW_DATE")" &)
 
 				;;
 
