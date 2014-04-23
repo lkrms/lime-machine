@@ -506,9 +506,11 @@ for TARGET_FILE in `get_targets`; do
 
 				if [ -z "$SHADOW_DATE" ]; then
 
+					SHADOW_DATE=`hostname -s`_${DATE}
+
 					log_source "Creating shadow copy."
 
-					ssh -F "$SCRIPT_DIR/ssh_config" -p $SSH_PORT -i "$SSH_KEY" "$SSH_USER@$SOURCE_HOST" "//`hostname -s`/vss/create_copy.cmd $SHADOW_PATH $DATE $SHADOW_VOLUMES" > $TEMP_FILE 2>&1
+					ssh -F "$SCRIPT_DIR/ssh_config" -p $SSH_PORT -i "$SSH_KEY" "$SSH_USER@$SOURCE_HOST" "//`hostname -s`/vss/create_copy.cmd $SHADOW_PATH $SHADOW_DATE $SHADOW_VOLUMES" > $TEMP_FILE 2>&1
 
 					STATUS=$?
 					ERR=`< $TEMP_FILE`
@@ -523,8 +525,7 @@ for TARGET_FILE in `get_targets`; do
 
 					else
 
-						SHADOW_DATE=$DATE
-						SHADOW_COPIES[$SOURCE_NAME]=$DATE
+						SHADOW_COPIES[$SOURCE_NAME]=$SHADOW_DATE
 
 						# allow shadow copy to "settle"
 						sleep 5
