@@ -299,7 +299,7 @@ function do_finalise {
 		if [ $SOURCE_TYPE = "rsync_shadow" ]; then
 
 			# don't close this shadow copy while there's still a chance another process will need it
-			while [ ! -f "${RUN_DIR}/batch_started_${BATCH_DATE}_${SCRIPT_PPID}" ]; do
+			while [ ! -f "${RUN_DIR}/batch_started_${BATCH_DATE}_$$" ]; do
 
 				sleep 30
 
@@ -365,7 +365,7 @@ function do_finalise {
 
 	if [ $SHUTDOWN_AFTER_BACKUP -eq 1 ]; then
 
-		if ! pidof -x -o $$,$PPID,$SCRIPT_PPID $SCRIPT_NAME >/dev/null; then
+		if ! pidof -x -o $$,$PPID,`my_pid` $SCRIPT_NAME >/dev/null; then
 
 			$SHUTDOWN_COMMAND
 
@@ -563,5 +563,5 @@ for TARGET_FILE in `get_targets`; do
 
 done
 
-touch "${RUN_DIR}/batch_started_${BATCH_DATE}_${SCRIPT_PPID}"
+touch "${RUN_DIR}/batch_started_${BATCH_DATE}_$$"
 

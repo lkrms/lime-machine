@@ -12,7 +12,6 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 BACKUP_ROOT=$(cd "$SCRIPT_DIR/.."; pwd)
 CONFIG_DIR=$BACKUP_ROOT/config
 SCRIPT_NAME=$(basename "$0")
-SCRIPT_PPID=$PPID
 
 if [ ! -f "$CONFIG_DIR/settings" ]; then
 
@@ -25,6 +24,8 @@ fi
 
 mkdir -p `dirname "$LOG_FILE"` || { echo "Error: $(dirname "$LOG_FILE") doesn't exist."; exit 0; }
 touch "$LOG_FILE" || { echo "Error: unable to open $LOG_FILE for writing."; exit 0; }
+
+mkdir -p "$RUN_DIR" || { echo "Error: $RUN_DIR doesn't exist."; exit 0; }
 touch "$RUN_DIR" || { echo "Error: unable to write to $RUN_DIR."; exit 0; }
 
 if [ ! -z "$PROXY_SERVICE" ]; then
@@ -75,6 +76,12 @@ function log_message {
 function log_source {
 
     echo -e "`log_time` $@" >> "$SOURCE_LOG_FILE"
+
+}
+
+function my_pid {
+
+    bash -c 'echo $PPID'
 
 }
 
