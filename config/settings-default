@@ -13,7 +13,7 @@ RUN_DIR="$BACKUP_ROOT/run"
 # Set this to 1 to shut down after each backup operation.
 SHUTDOWN_AFTER_BACKUP=0
 
-# By default, shut down after 2 minutes.
+# By default, shut down after 2 minutes. ReadyNAS users might prefer "/frontview/bin/autopoweroff".
 SHUTDOWN_COMMAND="sudo /sbin/shutdown -h -t 120"
 
 # Used for Cygwin downloads.

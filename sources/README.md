@@ -24,6 +24,8 @@ Additional source types will be offered in future versions.
 
 lime-machine will cope if `RSYNC_OPTIONS` is a string rather than a array, but for best results, please provide an array. Empty array syntax is simply `()`.
 
+`SOURCE_PATH` may be an array of source paths.
+
 **Note:** By default, lime-machine copies symlinks as symlinks. You should consider adding `--copy-links`, `--copy-unsafe-links` or `--safe-links` to `RSYNC_OPTIONS` if necessary.
 
 ### Example "rsync_ssh" source configuration
@@ -56,9 +58,9 @@ See above for important notes regarding symlinks.
     SHADOW_VOLUMES="C D"
     RSYNC_OPTIONS=()
 
-Shadow copies are mounted under `SHADOW_PATH` on the source server, which the rsync server must offer at `SOURCE_PATH`. Commands to create and delete shadow copies are issued over SSH (simpler Linux-friendly alternatives aren't secure enough).
+Shadow copies are mounted under `SHADOW_PATH` on the source server, which the rsync server must offer at `SOURCE_PATH` (which must not be an array). Commands to create and delete shadow copies are issued over SSH (simpler Linux-friendly alternatives aren't secure enough).
 
-`SOURCE_SUB_PATH` is optional. It allows copying only one volume/folder from your shadow copy set.
+`SOURCE_SUB_PATH` is optional. It allows replication of particular volumes and/or folders from your shadow copy set, and may be an array.
 
 See above for important notes regarding symlinks.
 
