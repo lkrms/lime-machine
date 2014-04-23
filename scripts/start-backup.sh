@@ -363,11 +363,17 @@ function do_finalise {
 
 	rm $TEMP_FILE
 
-	if [ $SHUTDOWN_AFTER_BACKUP -eq 1 ]; then
+	if ! pidof -x -o $$,$PPID,`my_pid` $SCRIPT_NAME >/dev/null; then
 
-		if ! pidof -x -o $$,$PPID,`my_pid` $SCRIPT_NAME >/dev/null; then
+		log_message "Backup sequence complete for all target volumes."
 
-			$SHUTDOWN_COMMAND
+		if [ $SHUTDOWN_AFTER_BACKUP -eq 1 ]; then
+
+			export LIME_MACHINE_SHUTDOWN_PENDING=1
+
+			log_message "Shutdown requested. Initiating snapshot thinning first."
+
+			$SCRIPT_DIR/start-thinning.sh
 
 		fi
 

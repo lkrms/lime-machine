@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # lime-machine: Linux backup software inspired by Time Machine on OS X.
-# Copyright (c) 2013 Luke Arms
+# Copyright (c) 2013-2014 Luke Arms
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -134,4 +134,15 @@ for TARGET_FILE in `get_targets`; do
 
 done
 
+if [ $LIME_MACHINE_SHUTDOWN_PENDING -eq 1 ]; then
+
+    log_message "Shutdown pending. Waiting for snapshot thinning to complete on all volumes."
+
+    wait
+
+    log_message "Snapshot thinning complete. Shutting down."
+
+    $SHUTDOWN_COMMAND
+
+fi
 
