@@ -1,5 +1,19 @@
 @echo off
 
+set is_elevated=0
+
+whoami /groups | findstr /b /c:"Mandatory Label\High Mandatory Level" | findstr /c:"Enabled group" >NUL && set is_elevated=1
+
+if %is_elevated%==0 (
+
+    echo Please use "Run as administrator" when opening this installer.
+
+    pause
+
+    exit /b 1
+
+)
+
 set installer_dir=%~dp0
 
 pushd "%TEMP%"
