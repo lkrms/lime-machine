@@ -79,12 +79,6 @@ function log_source {
 
 }
 
-function my_pid {
-
-    bash -c 'echo $PPID'
-
-}
-
 function escape_for_sed {
 
     echo "$@" | sed 's/[\/&]/\\&/g'
