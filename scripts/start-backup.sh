@@ -51,7 +51,7 @@ sed "s/{HOSTNAME}/$(hostname -s)/g" $BACKUP_ROOT/vss/.create_copy.cmd.template >
 # If present, the value of the first parameter is prepended to each path in the final string.
 function sanitise_rsync_source {
 
-	local SOURCE SOURCE_VAR=SOURCE_PATH PREFIX=$1 SANITISED=
+	local SOURCES SOURCE SOURCE_VAR=SOURCE_PATH PREFIX=$1 SANITISED=
 
 	if [ $SOURCE_TYPE = "rsync_shadow" ]; then
 
@@ -61,7 +61,9 @@ function sanitise_rsync_source {
 
 	if declare -p $SOURCE_VAR 2>/dev/null | grep -q '^declare -a'; then
 
-		for SOURCE in ${!SOURCE_VAR}; do
+		eval 'SOURCES="${'$SOURCE_VAR'[@]}"'
+
+		for SOURCE in $SOURCES; do
 
 			SANITISED="$SANITISED ${PREFIX}${SOURCE}"
 
