@@ -365,7 +365,7 @@ function do_finalise {
 
 	rm $TEMP_FILE
 
-	if ! pidof -x -o $$,$PPID,$(bash -c 'echo $PPID') $SCRIPT_NAME >/dev/null; then
+	if ! pidof -x -o $$ -o $PPID -o $(bash -c 'echo $PPID') $SCRIPT_NAME >/dev/null; then
 
 		log_message "Backup sequence complete for all target volumes."
 
