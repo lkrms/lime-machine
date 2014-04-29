@@ -23,7 +23,7 @@ SCRIPT_DIR=$(cd "$(dirname "$0")"; pwd)
 . "$SCRIPT_DIR/common.sh"
 
 # exit without error if another instance is already running
-if pidof -x -o $$,$PPID "$(basename "$0")" >/dev/null; then
+if pidof -x -o $$ -o $PPID "$(basename "$0")" >/dev/null; then
 
   log_message "Snapshot thinning is already in progress. Ignoring request to start thinning."
   exit 0
