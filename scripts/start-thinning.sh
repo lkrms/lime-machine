@@ -39,6 +39,8 @@ for TARGET_FILE in `get_targets`; do
     TARGET_NAME=`basename "$TARGET_FILE"`
     TARGET_MOUNT_POINT=
     TARGET_MOUNT_CHECK=1
+    TARGET_ATTEMPT_MOUNT=0
+    TARGET_UNMOUNT=0
 
     . "$TARGET_FILE"
 
@@ -123,9 +125,18 @@ for TARGET_FILE in `get_targets`; do
 
             log_message "Removing $SNAPSHOT_ROOT..."
 
-            #rm -Rf --one-file-system "$SNAPSHOT_ROOT"
-            rm -Rf "$SNAPSHOT_ROOT"
+            SNAPSHOT_NEW_ROOT=$(dirname "$SNAPSHOT_ROOT")/.expired.$(basename "$SNAPSHOT_ROOT")
 
+            mv "$SNAPSHOT_ROOT" "$SNAPSHOT_NEW_ROOT"
+            rm -Rf "$SNAPSHOT_NEW_ROOT"
+
+        done
+
+        for SNAPSHOT_ROOT in `find "$TARGET_MOUNT_POINT/snapshots" -mindepth 2 -maxdepth 2 -type d -name '.expired.*' | sort`; do
+
+            log_message "Completing removal of previously expired snapshot at $SNAPSHOT_ROOT..."
+
+            rm -Rf "$SNAPSHOT_ROOT"
 
         done
 
