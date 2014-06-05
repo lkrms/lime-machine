@@ -155,6 +155,8 @@ if [ ! -z "$LIME_MACHINE_SHUTDOWN_PENDING" ]; then
 
         log_message "Snapshot thinning complete. Shutting down."
 
+        close_targets
+
         $SHUTDOWN_COMMAND
 
     fi

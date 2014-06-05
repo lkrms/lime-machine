@@ -134,6 +134,38 @@ function get_targets {
 
 }
 
+function close_targets {
+
+    # no backgrounding, because this may be called pre-shutdown
+    for TARGET_FILE in `get_targets`; do
+
+        TARGET_NAME=`basename "$TARGET_FILE"`
+        TARGET_MOUNT_POINT=
+        TARGET_MOUNT_CHECK=1
+        TARGET_ATTEMPT_MOUNT=0
+        TARGET_UNMOUNT=0
+
+        . "$TARGET_FILE"
+
+        check_target >/dev/null 2>&1 || continue
+
+        # compress log files more than 2 days old
+        find "$TARGET_MOUNT_POINT/logs" -type f -name '*.log' -mtime +2 -exec gzip "{}" \;
+
+        if [ $TARGET_UNMOUNT -eq 1 ]; then
+
+            if ! umount "$TARGET_MOUNT_POINT"; then
+
+                log_error "Unable to unmount filesystem at $TARGET_MOUNT_POINT for target $TARGET_NAME."
+
+            fi
+
+        fi
+
+    done
+
+}
+
 function check_target {
 
     if [ ! -d "$TARGET_MOUNT_POINT" ]; then

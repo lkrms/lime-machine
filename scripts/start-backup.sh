@@ -377,6 +377,10 @@ function do_finalise {
 
 			$SCRIPT_DIR/start-thinning.sh
 
+		else
+
+			close_targets
+
 		fi
 
 	fi
