@@ -174,8 +174,8 @@ function do_mysql {
 
 	if [ ! -z "$LOCAL_PORT" ]; then
 
-		MYSQL_HOST=localhost
-		MYSQL_PORT="$LOCAL_PORT"
+		MYSQL_HOST=127.0.0.1
+		MYSQL_PORT=$LOCAL_PORT
 
 	fi
 
@@ -183,7 +183,7 @@ function do_mysql {
 
 	log_source "Retrieving list of databases."
 
-	SOURCE_DB_LIST=`mysql --host="$MYSQL_HOST" --port="$MYSQL_PORT" --user="$SOURCE_USER" --password="$SOURCE_PASSWORD" --batch --skip-column-names --execute="show databases" 2>$TEMP_FILE | grep -v "^\(mysql\|information_schema\|performance_schema\|test\)\$"`
+	SOURCE_DB_LIST=`mysql --host="$MYSQL_HOST" --port=$MYSQL_PORT --user="$SOURCE_USER" --password="$SOURCE_PASSWORD" --batch --skip-column-names --execute="show databases" 2>$TEMP_FILE | grep -v "^\(mysql\|information_schema\|performance_schema\|test\)\$"`
 
 	STATUS=$?
 	ERR=`< $TEMP_FILE`
@@ -203,11 +203,11 @@ function do_mysql {
 
 		for SOURCE_DB in $SOURCE_DB_LIST; do
 
-			log_source "$(dump_args mysqldump --host="$MYSQL_HOST" --port="$MYSQL_PORT" --user="$SOURCE_USER" --password="$SOURCE_PASSWORD" "${OPTIONS[@]}" "$SOURCE_DB")"
+			log_source "$(dump_args mysqldump --host="$MYSQL_HOST" --port=$MYSQL_PORT --user="$SOURCE_USER" --password="$SOURCE_PASSWORD" "${OPTIONS[@]}" "$SOURCE_DB")"
 
 			log_source "Starting mysqldump now."
 
-			mysqldump --host="$MYSQL_HOST" --port="$MYSQL_PORT" --user="$SOURCE_USER" --password="$SOURCE_PASSWORD" "${OPTIONS[@]}" "$SOURCE_DB" 2>$TEMP_FILE | gzip > "$PENDING_TARGET/${SOURCE_DB}_${DATE}.sql.gz"
+			mysqldump --host="$MYSQL_HOST" --port=$MYSQL_PORT --user="$SOURCE_USER" --password="$SOURCE_PASSWORD" "${OPTIONS[@]}" "$SOURCE_DB" 2>$TEMP_FILE | gzip > "$PENDING_TARGET/${SOURCE_DB}_${DATE}.sql.gz"
 
 			STATUS=${PIPESTATUS[0]}
 			THIS_ERR=`< $TEMP_FILE`
