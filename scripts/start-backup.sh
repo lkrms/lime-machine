@@ -169,11 +169,21 @@ function do_mysql {
 
 	fi
 
+	MYSQL_HOST="$SOURCE_HOST"
+	MYSQL_PORT=3306
+
+	if [ ! -z "$LOCAL_PORT" ]; then
+
+		MYSQL_HOST=localhost
+		MYSQL_PORT="$LOCAL_PORT"
+
+	fi
+
 	SUCCESS=1
 
 	log_source "Retrieving list of databases."
 
-	SOURCE_DB_LIST=`mysql --host="$SOURCE_HOST" --user="$SOURCE_USER" --password="$SOURCE_PASSWORD" --batch --skip-column-names --execute="show databases" 2>$TEMP_FILE | grep -v "^\(mysql\|information_schema\|performance_schema\|test\)\$"`
+	SOURCE_DB_LIST=`mysql --host="$MYSQL_HOST" --port="$MYSQL_PORT" --user="$SOURCE_USER" --password="$SOURCE_PASSWORD" --batch --skip-column-names --execute="show databases" 2>$TEMP_FILE | grep -v "^\(mysql\|information_schema\|performance_schema\|test\)\$"`
 
 	STATUS=$?
 	ERR=`< $TEMP_FILE`
@@ -193,11 +203,11 @@ function do_mysql {
 
 		for SOURCE_DB in $SOURCE_DB_LIST; do
 
-			log_source "$(dump_args mysqldump --host="$SOURCE_HOST" --user="$SOURCE_USER" --password="$SOURCE_PASSWORD" "${OPTIONS[@]}" "$SOURCE_DB")"
+			log_source "$(dump_args mysqldump --host="$MYSQL_HOST" --port="$MYSQL_PORT" --user="$SOURCE_USER" --password="$SOURCE_PASSWORD" "${OPTIONS[@]}" "$SOURCE_DB")"
 
 			log_source "Starting mysqldump now."
 
-			mysqldump --host="$SOURCE_HOST" --user="$SOURCE_USER" --password="$SOURCE_PASSWORD" "${OPTIONS[@]}" "$SOURCE_DB" 2>$TEMP_FILE | gzip > "$PENDING_TARGET/${SOURCE_DB}_${DATE}.sql.gz"
+			mysqldump --host="$MYSQL_HOST" --port="$MYSQL_PORT" --user="$SOURCE_USER" --password="$SOURCE_PASSWORD" "${OPTIONS[@]}" "$SOURCE_DB" 2>$TEMP_FILE | gzip > "$PENDING_TARGET/${SOURCE_DB}_${DATE}.sql.gz"
 
 			STATUS=${PIPESTATUS[0]}
 			THIS_ERR=`< $TEMP_FILE`
@@ -453,6 +463,7 @@ for TARGET_FILE in `get_targets`; do
 		SSH_USER=
 		SSH_PORT=
 		SSH_KEY=
+		LOCAL_PORT=
 		SHADOW_PATH=
 		SHADOW_VOLUMES=
 		RSYNC_OPTIONS=()
@@ -553,6 +564,31 @@ for TARGET_FILE in `get_targets`; do
 				log_message "Attempting MySQL backup of '$SOURCE_NAME' to '$TARGET_NAME'..."
 
 				(do_mysql &)
+
+				;;
+
+			mysql_ssh)
+
+				log_message "Attempting MySQL backup of '$SOURCE_NAME' to '$TARGET_NAME' over SSH..."
+
+				ssh -N -F "$SCRIPT_DIR/ssh_config" -L $LOCAL_PORT:localhost:3306 -p $SSH_PORT -i "$SSH_KEY" "$SSH_USER@$SOURCE_HOST" > $TEMP_FILE 2>&1
+
+				STATUS=$?
+				ERR=`< $TEMP_FILE`
+
+				log_source "Returned from SSH connection attempt. Output:\n\n$ERR\n\nExit status: $STATUS\n"
+
+				if [ $STATUS -ne 0 ]; then
+
+					SUBJECT="FAILURE: $SUBJECT"
+					MESSAGE="Unable to open SSH connection. Exit status: $STATUS.\n\nOutput collected from stderr is below.\n\n$ERR"
+					do_finalise
+
+				else
+
+					(do_mysql &)
+
+				fi
 
 				;;
 

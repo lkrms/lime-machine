@@ -72,6 +72,20 @@ See above for important notes regarding symlinks.
     SOURCE_PASSWORD=MYSQL_USER_PASSWORD
     MYSQLDUMP_OPTIONS=(--lock-all-tables --flush-logs)
 
+### Example "mysql_ssh" source configuration
+
+    SOURCE_TYPE=mysql_ssh
+    SOURCE_HOST=dbserver.domain.local
+    SOURCE_USER=mysql_user
+    SOURCE_PASSWORD=MYSQL_USER_PASSWORD
+    SSH_USER=ssh_user
+    SSH_PORT=2222
+    SSH_KEY=$BACKUP_ROOT/secrets/ssh_private_key
+    LOCAL_PORT=
+    MYSQLDUMP_OPTIONS=(--lock-all-tables --flush-logs)
+
+`LOCAL_PORT` is opened on the loopback interface of the backup server and tunnelled over SSH to `localhost:3306` on the source server. It MUST be unique to each active source on the backup server.
+
 ### Example "postgres" source configuration
 
     SOURCE_TYPE=postgres
