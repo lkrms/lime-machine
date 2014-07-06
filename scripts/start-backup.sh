@@ -184,7 +184,7 @@ function do_mysql {
 
 	log_source "Retrieving list of databases."
 
-	SOURCE_DB_LIST=`mysql --host="$MYSQL_HOST" --port=$MYSQL_PORT --user="$SOURCE_USER" --password="$SOURCE_PASSWORD" --batch --skip-column-names --execute="show databases" 2>$TEMP_FILE | grep -v '^(mysql|information_schema|performance_schema|test)$'`
+	SOURCE_DB_LIST=`mysql --host="$MYSQL_HOST" --port=$MYSQL_PORT --user="$SOURCE_USER" --password="$SOURCE_PASSWORD" --batch --skip-column-names --execute="show databases" 2>$TEMP_FILE | grep -Ev '^(mysql|information_schema|performance_schema|test)$'`
 
 	STATUS=$?
 	ERR=`< $TEMP_FILE`
