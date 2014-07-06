@@ -377,6 +377,9 @@ function do_finalise {
 
 	if ! pidof -x -o $$ -o $PPID -o $(bash -c 'echo $PPID') $SCRIPT_NAME >/dev/null; then
 
+		# TODO: make this more elegant
+		killall ssh
+
 		log_message "Backup sequence complete for all target volumes."
 
 		if [ $SHUTDOWN_AFTER_BACKUP -eq 1 ]; then
@@ -571,7 +574,7 @@ for TARGET_FILE in `get_targets`; do
 
 				log_message "Attempting MySQL backup of '$SOURCE_NAME' to '$TARGET_NAME' over SSH..."
 
-				ssh -N -F "$SCRIPT_DIR/ssh_config" -L $LOCAL_PORT:localhost:3306 -p $SSH_PORT -i "$SSH_KEY" "$SSH_USER@$SOURCE_HOST" > $TEMP_FILE 2>&1
+				ssh -fN -F "$SCRIPT_DIR/ssh_config" -L $LOCAL_PORT:localhost:3306 -p $SSH_PORT -i "$SSH_KEY" "$SSH_USER@$SOURCE_HOST" > $TEMP_FILE 2>&1
 
 				STATUS=$?
 				ERR=`< $TEMP_FILE`
