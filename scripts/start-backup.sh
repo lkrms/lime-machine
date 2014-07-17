@@ -464,6 +464,7 @@ for TARGET_FILE in `get_targets`; do
 		SOURCE_EXCLUDE=
 		SOURCE_PORT=
 		SOURCE_SUB_PATH=
+		SSH_RELAY=
 		SSH_USER=
 		SSH_PORT=
 		SSH_KEY=
@@ -516,6 +517,31 @@ for TARGET_FILE in `get_targets`; do
 				log_message "Attempting rsync backup of '$SOURCE_NAME' to '$TARGET_NAME' over SSH..."
 
 				(do_rsync $SSH_USER@$SOURCE_HOST:"`sanitise_rsync_source`" -e "ssh -F '$SCRIPT_DIR/ssh_config' -p $SSH_PORT -i '$SSH_KEY'" &)
+
+				;;
+
+			rsync_ssh_relay)
+
+				log_message "Attempting rsync backup of '$SOURCE_NAME' to '$TARGET_NAME' via SSH relay..."
+
+				ssh -fN -F "$SCRIPT_DIR/ssh_config" -L "$LOCAL_PORT:$SOURCE_HOST:873" -p $SSH_PORT -i "$SSH_KEY" "$SSH_USER@$SSH_RELAY" > $TEMP_FILE 2>&1
+
+				STATUS=$?
+				ERR=`< $TEMP_FILE`
+
+				log_source "Returned from SSH connection attempt. Output:\n\n$ERR\n\nExit status: $STATUS\n"
+
+				if [ $STATUS -ne 0 ]; then
+
+					SUBJECT="FAILURE: $SUBJECT"
+					MESSAGE="Unable to open SSH connection. Exit status: $STATUS.\n\nOutput collected from stderr is below.\n\n$ERR"
+					do_finalise
+
+				else
+
+					(do_rsync $SOURCE_USER@localhost::"`sanitise_rsync_source`" --port=$LOCAL_PORT &)
+
+				fi
 
 				;;
 

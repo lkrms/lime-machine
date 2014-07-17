@@ -41,6 +41,25 @@ lime-machine will cope if `RSYNC_OPTIONS` is a string rather than a array, but f
 
 See above for important notes regarding symlinks.
 
+### Example "rsync_ssh_relay" source configuration
+
+    SOURCE_TYPE=rsync_ssh_relay
+    SOURCE_HOST=offsiteserver.com
+    SOURCE_PATH=/home/offsiteserver
+    SOURCE_USER=rsync_user
+    SOURCE_SECRET=$BACKUP_ROOT/secrets/rsync_password
+    SOURCE_EXCLUDE=$BACKUP_ROOT/sources/offsiteserver.exclude
+    SSH_RELAY=relayserver.com
+    SSH_USER=offsiteserver
+    SSH_PORT=2222
+    SSH_KEY=$BACKUP_ROOT/secrets/ssh_private_key
+    LOCAL_PORT=
+    RSYNC_OPTIONS=()
+
+`LOCAL_PORT` is opened on the loopback interface of the relay and tunnelled over SSH to `SOURCE_HOST:873` (where `SOURCE_HOST` may be `localhost` or any other relay-accessible host). `LOCAL_PORT` MUST be unique to each active source on the backup server.
+
+See above for important notes regarding symlinks.
+
 ### Example "rsync_shadow" source configuration
 
     SOURCE_TYPE=rsync_shadow
