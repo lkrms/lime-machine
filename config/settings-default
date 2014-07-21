@@ -10,6 +10,9 @@ LOG_FILE="$BACKUP_ROOT/log/lime-machine.log"
 # ...and to this directory.
 RUN_DIR="$BACKUP_ROOT/run"
 
+# Set this to 1 if backup jobs should execute sequentially rather than simultaneously.
+SEQUENTIAL_OPERATIONS=0
+
 # Set this to 1 to shut down after each backup operation.
 SHUTDOWN_AFTER_BACKUP=0
 

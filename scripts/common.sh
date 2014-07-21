@@ -20,6 +20,8 @@ if [ ! -f "$CONFIG_DIR/settings" ]; then
 
 fi
 
+SEQUENTIAL_OPERATIONS=0
+
 . "$CONFIG_DIR/settings"
 
 mkdir -p `dirname "$LOG_FILE"` || { echo "Error: $(dirname "$LOG_FILE") doesn't exist."; exit 0; }

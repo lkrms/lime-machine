@@ -638,6 +638,12 @@ for TARGET_FILE in `get_targets`; do
 
 		esac
 
+		if [ $SEQUENTIAL_OPERATIONS -eq 1 ]; then
+
+			wait
+
+		fi
+
 	done
 
 done
