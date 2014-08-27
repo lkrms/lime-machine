@@ -550,6 +550,7 @@ for TARGET_FILE in `get_targets`; do
 				log_message "Attempting rsync backup of '$SOURCE_NAME' to '$TARGET_NAME' with shadow copy..."
 
 				SHADOW_DATE=${SHADOW_COPIES[$SOURCE_NAME]}
+				SHADOW_OK=1
 
 				if [ -z "$SHADOW_DATE" ]; then
 
@@ -568,6 +569,7 @@ for TARGET_FILE in `get_targets`; do
 
 						SUBJECT="FAILURE: $SUBJECT"
 						MESSAGE="Unable to create shadow copy. Exit status: $STATUS.\n\nOutput collected from stderr is below.\n\n$ERR"
+						SHADOW_OK=0
 						do_finalise
 
 					else
@@ -585,7 +587,11 @@ for TARGET_FILE in `get_targets`; do
 
 				fi
 
-				(do_rsync $SOURCE_USER@$SOURCE_HOST::"$(sanitise_rsync_source "$SOURCE_PATH/$SHADOW_DATE")" &)
+				if [ $SHADOW_OK -eq 1 ]; then
+
+					(do_rsync $SOURCE_USER@$SOURCE_HOST::"$(sanitise_rsync_source "$SOURCE_PATH/$SHADOW_DATE")" &)
+
+				fi
 
 				;;
 
