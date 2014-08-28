@@ -1,8 +1,0 @@
-Host *
-#	ControlMaster auto
-#	ControlPath /tmp/lime_machine_ssh_%h_%p_%r
-#	ExitOnForwardFailure yes
-	StrictHostKeyChecking no
-	UserKnownHostsFile ~/.ssh/lime_machine_known_hosts
-	ServerAliveInterval 60
-	LogLevel DEBUG3

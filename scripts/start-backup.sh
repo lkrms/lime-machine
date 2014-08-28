@@ -334,7 +334,7 @@ function do_finalise {
 
 						touch "${RUN_DIR}/rsync_shadow_closed_${SOURCE_NAME}_${SHADOW_DATE}"
 
-						ssh -vF "$SCRIPT_DIR/ssh_config" -p $SSH_PORT -i "$SSH_KEY" "$SSH_USER@$SOURCE_HOST" "//`hostname -s`/vss/close_copy.cmd $SHADOW_PATH $SHADOW_DATE" > $TEMP_FILE 2>&1
+						ssh -vF "$CONFIG_DIR/ssh_config" -p $SSH_PORT -i "$SSH_KEY" "$SSH_USER@$SOURCE_HOST" "//`hostname -s`/vss/close_copy.cmd $SHADOW_PATH $SHADOW_DATE" > $TEMP_FILE 2>&1
 
 						STATUS=$?
 						ERR=`< $TEMP_FILE`
@@ -516,7 +516,7 @@ for TARGET_FILE in `get_targets`; do
 
 				log_message "Attempting rsync backup of '$SOURCE_NAME' to '$TARGET_NAME' over SSH..."
 
-				(do_rsync $SSH_USER@$SOURCE_HOST:"`sanitise_rsync_source`" -e "ssh -F '$SCRIPT_DIR/ssh_config' -p $SSH_PORT -i '$SSH_KEY'" &)
+				(do_rsync $SSH_USER@$SOURCE_HOST:"`sanitise_rsync_source`" -e "ssh -F '$CONFIG_DIR/ssh_config' -p $SSH_PORT -i '$SSH_KEY'" &)
 
 				;;
 
@@ -524,7 +524,7 @@ for TARGET_FILE in `get_targets`; do
 
 				log_message "Attempting rsync backup of '$SOURCE_NAME' to '$TARGET_NAME' via SSH relay..."
 
-				ssh -vfN -F "$SCRIPT_DIR/ssh_config" -L "$LOCAL_PORT:$SOURCE_HOST:873" -p $SSH_PORT -i "$SSH_KEY" "$SSH_USER@$SSH_RELAY" > $TEMP_FILE 2>&1
+				ssh -vfN -F "$CONFIG_DIR/ssh_config" -L "$LOCAL_PORT:$SOURCE_HOST:873" -p $SSH_PORT -i "$SSH_KEY" "$SSH_USER@$SSH_RELAY" > $TEMP_FILE 2>&1
 
 				STATUS=$?
 				ERR=`< $TEMP_FILE`
@@ -558,7 +558,7 @@ for TARGET_FILE in `get_targets`; do
 
 					log_source "Creating shadow copy."
 
-					ssh -vF "$SCRIPT_DIR/ssh_config" -p $SSH_PORT -i "$SSH_KEY" "$SSH_USER@$SOURCE_HOST" "//`hostname -s`/vss/create_copy.cmd $SHADOW_PATH $SHADOW_DATE $SHADOW_VOLUMES" > $TEMP_FILE 2>&1
+					ssh -vF "$CONFIG_DIR/ssh_config" -p $SSH_PORT -i "$SSH_KEY" "$SSH_USER@$SOURCE_HOST" "//`hostname -s`/vss/create_copy.cmd $SHADOW_PATH $SHADOW_DATE $SHADOW_VOLUMES" > $TEMP_FILE 2>&1
 
 					STATUS=$?
 					ERR=`< $TEMP_FILE`
@@ -607,7 +607,7 @@ for TARGET_FILE in `get_targets`; do
 
 				log_message "Attempting MySQL backup of '$SOURCE_NAME' to '$TARGET_NAME' over SSH..."
 
-				ssh -vfN -F "$SCRIPT_DIR/ssh_config" -L $LOCAL_PORT:localhost:3306 -p $SSH_PORT -i "$SSH_KEY" "$SSH_USER@$SOURCE_HOST" > $TEMP_FILE 2>&1
+				ssh -vfN -F "$CONFIG_DIR/ssh_config" -L $LOCAL_PORT:localhost:3306 -p $SSH_PORT -i "$SSH_KEY" "$SSH_USER@$SOURCE_HOST" > $TEMP_FILE 2>&1
 
 				STATUS=$?
 				ERR=`< $TEMP_FILE`
