@@ -138,6 +138,9 @@ function get_targets {
 
 function close_targets {
 
+    # allow time for any pending file locks to be released
+    sleep 30
+
     # no backgrounding, because this may be called pre-shutdown
     for TARGET_FILE in `get_targets`; do
 
