@@ -15,3 +15,5 @@ If `TARGET_ATTEMPT_MOUNT` is `1` (and `TARGET_MOUNT_CHECK` is also `1`), lime-ma
 
 If, in addition to the above, `TARGET_UNMOUNT` is also `1`, lime-machine will unmount the target after completing each backup / thinning operation.
 
+To deactivate a target, rename it to `target_name.inactive`.
+

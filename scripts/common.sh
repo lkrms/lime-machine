@@ -132,7 +132,7 @@ function dump_args {
 
 function get_targets {
 
-    echo -n `find "$BACKUP_ROOT/targets" -type f \! -iname ".*" \! -iname "README.*" | sort`
+    echo -n `find "$BACKUP_ROOT/targets" -type f \! -iname ".*" \! -iname "*.inactive" \! -iname "README.*" | sort`
 
 }
 
