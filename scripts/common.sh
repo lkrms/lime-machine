@@ -184,7 +184,7 @@ function check_target {
 
         if [ $TARGET_ATTEMPT_MOUNT -eq 1 ]; then
 
-            if ! mount "$TARGET_MOUNT_POINT" >/dev/null 2>&1; then
+            if ! mount "$TARGET_MOUNT_POINT"; then
 
                 log_message "Unable to mount a filesystem at $TARGET_MOUNT_POINT for target $TARGET_NAME. Ignoring this target."
                 return 1

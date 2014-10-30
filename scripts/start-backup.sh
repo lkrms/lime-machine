@@ -416,7 +416,7 @@ for TARGET_FILE in `get_targets`; do
 
 	. "$TARGET_FILE"
 
-    check_target || continue
+    check_target >/dev/null 2>&1 || continue
 
 	log_message "Found target volume for $TARGET_NAME at $TARGET_MOUNT_POINT. Initiating backup sequence."
 
