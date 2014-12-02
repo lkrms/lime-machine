@@ -21,9 +21,12 @@ pushd "%TEMP%"
 set arch=x86
 if "%PROCESSOR_ARCHITECTURE%"=="AMD64" set arch=x86_64
 
-cmd /c %installer_dir%cygwin\setup-%arch%.exe --local-package-dir {LOCALCACHE} {PROXY} {MIRROR} --root C:\cygwin --packages openssh,rsync,cygrunsrv --arch %arch% --quiet-mode
+cmd /c %installer_dir%cygwin\setup-%arch%.exe --local-package-dir {LOCALCACHE} {PROXY} {MIRROR} --root C:\cygwin --packages openssh,rsync,cygrunsrv,vim --arch %arch% --quiet-mode
 
 popd
+
+assoc .sh=BashScript
+ftype BashScript=C:\cygwin\bin\bash.exe --login -i "%1" %*
 
 pause
 
