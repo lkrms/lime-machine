@@ -12,6 +12,7 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 BACKUP_ROOT=$(cd "$SCRIPT_DIR/.."; pwd)
 CONFIG_DIR=$BACKUP_ROOT/config
 SCRIPT_NAME=$(basename "$0")
+BASH_MAJOR_VERSION=${BASH_VERSINFO[0]}
 
 if [ ! -f "$CONFIG_DIR/settings" ]; then
 

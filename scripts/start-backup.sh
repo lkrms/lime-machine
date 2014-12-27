@@ -402,7 +402,11 @@ function do_finalise {
 }
 
 # declare SHADOW_COPIES as an associative array - Bash 4+ only
-declare -A SHADOW_COPIES
+if [ $BASH_MAJOR_VERSION -ge 4 ]; then
+
+	declare -A SHADOW_COPIES
+
+fi
 
 BATCH_DATE=`date "+%Y-%m-%d-%H%M%S"`
 
@@ -549,7 +553,14 @@ for TARGET_FILE in `get_targets`; do
 
 				log_message "Attempting rsync backup of '$SOURCE_NAME' to '$TARGET_NAME' with shadow copy..."
 
-				SHADOW_DATE=${SHADOW_COPIES[$SOURCE_NAME]}
+				SHADOW_DATE=
+
+				if [ $BASH_MAJOR_VERSION -ge 4 ]; then
+
+					SHADOW_DATE=${SHADOW_COPIES[$SOURCE_NAME]}
+
+				fi
+
 				SHADOW_OK=1
 
 				if [ -z "$SHADOW_DATE" ]; then
@@ -574,7 +585,11 @@ for TARGET_FILE in `get_targets`; do
 
 					else
 
-						SHADOW_COPIES[$SOURCE_NAME]=$SHADOW_DATE
+						if [ $BASH_MAJOR_VERSION -ge 4 ]; then
+
+							SHADOW_COPIES[$SOURCE_NAME]=$SHADOW_DATE
+
+						fi
 
 						# allow shadow copy to "settle"
 						sleep 5
