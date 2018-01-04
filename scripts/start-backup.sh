@@ -297,7 +297,7 @@ function do_finalise {
 	log_message "$SUBJECT"
 	log_source "Backup operation: $RESULT"
 
-	echo -e "$MESSAGE" | mail -s "$SUBJECT" "$NOTIFY"
+	echo -e "$MESSAGE" | mail -s "$SUBJECT" -r "$FROM_EMAIL" "$NOTIFY"
 
 	log_source "Result notification sent:\n\nTo: $NOTIFY\nSubject: $SUBJECT\nMessage:\n$MESSAGE.\n"
 
@@ -346,7 +346,7 @@ function do_finalise {
 							SUBJECT="WARNING: $SUBJECT"
 							MESSAGE="Unable to close shadow copy. Exit status: $STATUS.\n\nOutput collected from stderr is below.\n\n$ERR"
 
-							echo -e "$MESSAGE" | mail -s "$SUBJECT" "$ERROR_EMAIL"
+							echo -e "$MESSAGE" | mail -s "$SUBJECT" -r "$FROM_EMAIL" "$ERROR_EMAIL"
 
 							log_source "Error notification sent:\n\nTo: $ERROR_EMAIL\nSubject: $SUBJECT\nMessage:\n$MESSAGE.\n"
 

@@ -59,7 +59,7 @@ function send_error_log {
         SUBJECT="WARNING: Backup errors reported on `hostname -s`"
         MESSAGE="Relevant log entries follow.\n\n$ERROR_LOG\n"
 
-        echo -e "$MESSAGE" | mail -s "$SUBJECT" "$ERROR_EMAIL"
+        echo -e "$MESSAGE" | mail -s "$SUBJECT" -r "$FROM_EMAIL" "$ERROR_EMAIL"
 
     fi
 

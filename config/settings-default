@@ -1,3 +1,6 @@
+# Emails are sent from this address. REQUIRED.
+FROM_EMAIL="backup@mydomain.net"
+
 # Error notifications are sent to this address. REQUIRED.
 ERROR_EMAIL="root"
 
