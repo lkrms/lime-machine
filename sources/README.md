@@ -24,6 +24,14 @@ Additional source types will be offered in future versions.
 
 lime-machine will cope if `RSYNC_OPTIONS` is a string rather than a array, but for best results, please provide an array. Empty array syntax is simply `()`.
 
+Options previously applied by default but now removed are:
+
+    -O --no-p --no-g --chmod=ugo=rwX
+
+Recommended for Linux-based sources:
+
+    -pog --fake-super
+
 `SOURCE_PATH` may be an array of source paths.
 
 **Note:** By default, lime-machine copies symlinks as symlinks. You should consider adding `--copy-links`, `--copy-unsafe-links` or `--safe-links` to `RSYNC_OPTIONS` if necessary.

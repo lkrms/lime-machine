@@ -117,11 +117,11 @@ function do_rsync {
 
 	fi
 
-	log_source "$(dump_args rsync -lrtOv --no-p --no-g --chmod=ugo=rwX "${OPTIONS[@]}" --exclude-from "$EXCLUDE_PATH" --link-dest="$TARGET_MOUNT_POINT/latest/$SOURCE_NAME/" "$SOURCE" "$PENDING_TARGET/")"
+	log_source "$(dump_args rsync -lrtv "${OPTIONS[@]}" --exclude-from "$EXCLUDE_PATH" --link-dest="$TARGET_MOUNT_POINT/latest/$SOURCE_NAME/" "$SOURCE" "$PENDING_TARGET/")"
 
 	log_source "Starting rsync now. stdout:\n"
 
-	rsync -lrtOv --no-p --no-g --chmod=ugo=rwX "${OPTIONS[@]}" --exclude-from "$EXCLUDE_PATH" --link-dest="$TARGET_MOUNT_POINT/latest/$SOURCE_NAME/" "$SOURCE" "$PENDING_TARGET/" >> "$SOURCE_LOG_FILE" 2>$TEMP_FILE
+	rsync -lrtv "${OPTIONS[@]}" --exclude-from "$EXCLUDE_PATH" --link-dest="$TARGET_MOUNT_POINT/latest/$SOURCE_NAME/" "$SOURCE" "$PENDING_TARGET/" >> "$SOURCE_LOG_FILE" 2>$TEMP_FILE
 
 	STATUS=$?
 	ERR=`< $TEMP_FILE`
