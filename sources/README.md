@@ -30,7 +30,7 @@ Options previously applied by default but now removed are:
 
 Recommended for Linux-based sources:
 
-    -pog --fake-super
+    -pog --fake-super --numeric-ids
 
 `SOURCE_PATH` may be an array of source paths.
 
