@@ -145,21 +145,31 @@ for TARGET_FILE in `get_targets`; do
 
 done
 
-if [ ! -z "$LIME_MACHINE_SHUTDOWN_PENDING" ]; then
+if [ -z "$LIME_MACHINE_SHUTDOWN_PENDING" ]; then
 
-    if [ $LIME_MACHINE_SHUTDOWN_PENDING -eq 1 ]; then
+    LIME_MACHINE_SHUTDOWN_PENDING=0
 
-        log_message "Shutdown pending. Waiting for snapshot thinning to complete on all volumes."
+fi
 
-        wait
+if [ $LIME_MACHINE_SHUTDOWN_PENDING -eq 1 ]; then
 
-        log_message "Snapshot thinning complete. Shutting down."
+    log_message "Shutdown pending. Waiting for snapshot thinning to complete on all volumes."
 
-        close_targets
+    wait
 
-        $SHUTDOWN_COMMAND
+    log_message "Snapshot thinning complete. Shutting down."
 
-    fi
+    close_targets
+
+    $SHUTDOWN_COMMAND
+
+else
+
+    wait
+
+    log_message "Snapshot thinning complete."
+
+    close_targets
 
 fi
 
