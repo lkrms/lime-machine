@@ -378,8 +378,11 @@ function do_finalise {
 
 	if ! pidof -x -o $$ -o $PPID -o $(bash -c 'echo $PPID') $SCRIPT_NAME >/dev/null; then
 
-		# TODO: make this more elegant
-		killall ssh
+		if [ ! -z "$SSH_KILL_REGEX" ]; then
+
+			pkill -fU "$USER" "$SSH_KILL_REGEX"
+
+		fi
 
 		log_message "Backup sequence complete for all target volumes."
 

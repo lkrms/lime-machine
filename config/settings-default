@@ -33,3 +33,5 @@ CYGWIN_MIRROR=""
 # Where should Cygwin downloads be stored on clients? REQUIRED (if using Cygwin).
 CYGWIN_PACKAGE_ROOT="C:\\cygwin.cache"
 
+# This example should work with the SSH settings suggested in ssh_config-default. It's used to match SSH processes to kill after backups complete.
+SSH_KILL_REGEX='^ssh.*/tmp/lime_machine_ssh_.*\[mux\]'
