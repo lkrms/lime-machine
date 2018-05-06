@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # lime-machine: Linux backup software inspired by Time Machine on OS X.
-# Copyright (c) 2013-2014 Luke Arms
+# Copyright (c) 2013-2018 Luke Arms
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

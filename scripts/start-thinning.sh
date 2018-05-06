@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # lime-machine: Linux backup software inspired by Time Machine on OS X.
-# Copyright (c) 2013-2014 Luke Arms
+# Copyright (c) 2013-2018 Luke Arms
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -59,6 +59,8 @@ for TARGET_FILE in `get_targets`; do
         NOW_TIMESTAMP=`now2timestamp`
         ACCUM_GAP=0
 
+        # TODO: auto-expire all but last snapshot for each day beyond yesterday
+
         for ID in `seq 0 $(( SNAPSHOT_COUNT - 1 ))`; do
 
             SNAPSHOT=${SNAPSHOTS[$ID]}
@@ -66,6 +68,7 @@ for TARGET_FILE in `get_targets`; do
             THIS_DATE=`snapshot2date "$SNAPSHOT"`
             THIS_TIMESTAMP=`date2timestamp "$THIS_DATE"`
 
+            # only proceed if this isn't the first or last snapshot
             if [ $ID -gt 0 -a $(( ID + 1 )) -lt $SNAPSHOT_COUNT ]; then
 
                 THIS_AGE=$(( NOW_TIMESTAMP - THIS_TIMESTAMP ))
