@@ -21,6 +21,7 @@ Additional source types will be offered in future versions.
     SOURCE_SECRET=$BACKUP_ROOT/secrets/rsync_password
     SOURCE_EXCLUDE=$BACKUP_ROOT/sources/server.exclude
     RSYNC_OPTIONS=(--whole-file)
+    SOURCE_ALWAYS_THIN=(/paths/to/files /we/dont/need/more/than/one /copy/of)
 
 lime-machine will cope if `RSYNC_OPTIONS` is a string rather than a array, but for best results, please provide an array. Empty array syntax is simply `()`.
 
@@ -46,6 +47,7 @@ Recommended for Linux-based sources:
     SSH_PORT=2222
     SSH_KEY=$BACKUP_ROOT/secrets/ssh_private_key
     RSYNC_OPTIONS=()
+    SOURCE_ALWAYS_THIN=()
 
 See above for important notes regarding symlinks.
 
@@ -63,6 +65,7 @@ See above for important notes regarding symlinks.
     SSH_KEY=$BACKUP_ROOT/secrets/ssh_private_key
     LOCAL_PORT=
     RSYNC_OPTIONS=()
+    SOURCE_ALWAYS_THIN=()
 
 `LOCAL_PORT` is opened on the loopback interface of the relay and tunnelled over SSH to `SOURCE_HOST:873` (where `SOURCE_HOST` may be `localhost` or any other relay-accessible host). `LOCAL_PORT` MUST be unique to each active source on the backup server.
 
@@ -84,6 +87,7 @@ See above for important notes regarding symlinks.
     SHADOW_PATH=C:\\\\.backup
     SHADOW_VOLUMES="C D"
     RSYNC_OPTIONS=()
+    SOURCE_ALWAYS_THIN=()
 
 Shadow copies are mounted under `SHADOW_PATH` on the source server, which the rsync server must offer at `SOURCE_PATH` (which must not be an array). Commands to create and delete shadow copies are issued over SSH (simpler Linux-friendly alternatives aren't secure enough).
 

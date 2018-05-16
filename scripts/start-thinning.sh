@@ -61,6 +61,41 @@ for TARGET_FILE in `get_targets`; do
 
         # TODO: auto-expire all but last snapshot for each day beyond yesterday
 
+        SOURCE_NAME="$(basename "$SOURCE_ROOT")"
+        SOURCE_FILE="$BACKUP_ROOT/sources/$SOURCE_NAME"
+
+        # identify paths that we always thin (i.e. keep only the latest copy of)
+        if [ -f "$SOURCE_FILE" ]; then
+
+            SOURCE_ALWAYS_THIN=()
+
+            . "$SOURCE_FILE"
+
+            if [ "${#SOURCE_ALWAYS_THIN[@]}" -gt "0" ]; then
+
+                # don't inspect the most recent snapshot
+                for ID in $(seq 0 $(( SNAPSHOT_COUNT - 2 ))); do
+
+                    SNAPSHOT=${SNAPSHOTS[$ID]}
+
+                    for THIN_PATH in "${SOURCE_ALWAYS_THIN[@]}"; do
+
+                        FULL_THIN_PATH="${SOURCE_ROOT}/${SNAPSHOT}${THIN_PATH}"
+
+                        if [ -e "$FULL_THIN_PATH" ]; then
+
+                            log_message "Will be thinned in next release: $FULL_THIN_PATH"
+
+                        fi
+
+                    done
+
+                done
+
+            fi
+
+        fi
+
         for ID in `seq 0 $(( SNAPSHOT_COUNT - 1 ))`; do
 
             SNAPSHOT=${SNAPSHOTS[$ID]}
