@@ -56,6 +56,7 @@ for TARGET_FILE in `get_targets`; do
 
         SNAPSHOT_COUNT=${#SNAPSHOTS[@]}
         EXPIRED_COUNT=0
+        THIN_COUNT=0
         NOW_TIMESTAMP=`now2timestamp`
         ACCUM_GAP=0
 
@@ -84,7 +85,8 @@ for TARGET_FILE in `get_targets`; do
 
                         if [ -e "$FULL_THIN_PATH" ]; then
 
-                            log_message "Will be thinned in next release: $FULL_THIN_PATH"
+                            EXPIRED_SNAPSHOTS=("${EXPIRED_SNAPSHOTS[@]}" "$FULL_THIN_PATH")
+                            (( THIN_COUNT++ ))
 
                         fi
 
@@ -153,7 +155,7 @@ for TARGET_FILE in `get_targets`; do
 
         done
 
-        log_message "$SNAPSHOT_COUNT snapshots found. $EXPIRED_COUNT snapshots have expired and will be removed..."
+        log_message "$SNAPSHOT_COUNT snapshots found. $THIN_COUNT paths identified for removal from non-current snapshots. $EXPIRED_COUNT snapshots have expired and will be removed."
 
     done
 
@@ -163,10 +165,19 @@ for TARGET_FILE in `get_targets`; do
 
             log_message "Removing $SNAPSHOT_ROOT..."
 
-            SNAPSHOT_NEW_ROOT=$(dirname "$SNAPSHOT_ROOT")/.expired.$(basename "$SNAPSHOT_ROOT")
+            # rename before deleting if this is a full snapshot
+            if [ "$(dirname "$SNAPSHOT_ROOT")" == "$SOURCE_ROOT" ]; then
 
-            mv "$SNAPSHOT_ROOT" "$SNAPSHOT_NEW_ROOT"
-            rm -Rf "$SNAPSHOT_NEW_ROOT"
+                SNAPSHOT_NEW_ROOT="$(dirname "$SNAPSHOT_ROOT")/.expired.$(basename "$SNAPSHOT_ROOT")"
+
+                mv "$SNAPSHOT_ROOT" "$SNAPSHOT_NEW_ROOT"
+                rm -Rf "$SNAPSHOT_NEW_ROOT"
+
+            else
+
+                rm -Rf "$SNAPSHOT_ROOT"
+
+            fi
 
         done
 
