@@ -52,15 +52,44 @@ for TARGET_FILE in `get_targets`; do
 
         log_message "Looking for expired snapshots in $SOURCE_ROOT..."
 
-        SNAPSHOTS=(`find "$SOURCE_ROOT" -mindepth 1 -maxdepth 1 -type d -regex '.*/[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][-T][0-9][0-9][0-9][0-9][0-9][0-9]' -exec basename '{}' \; | sort`)
-
-        SNAPSHOT_COUNT=${#SNAPSHOTS[@]}
         EXPIRED_COUNT=0
         THIN_COUNT=0
         NOW_TIMESTAMP=`now2timestamp`
+
+        # first, pre-expire all but the last snapshot on any given day
+        SNAPSHOT_DATES=(`find "$SOURCE_ROOT" -mindepth 1 -maxdepth 1 -type d -regex '.*/[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][-T][0-9][0-9][0-9][0-9][0-9][0-9]' -exec basename '{}' \; | cut -c 1-10 | sort -u`)
+
+        for SNAPSHOT_DATE in "${SNAPSHOT_DATES[@]}"; do
+
+            SNAPSHOTS=(`find "$SOURCE_ROOT" -mindepth 1 -maxdepth 1 -type d -regex '.*/[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][-T][0-9][0-9][0-9][0-9][0-9][0-9]' -name "$SNAPSHOT_DATE"'*' -exec basename '{}' \; | sort`)
+            SNAPSHOT_COUNT=${#SNAPSHOTS[@]}
+
+            if [ "$SNAPSHOT_COUNT" -gt "1" ]; then
+
+                for ID in $(seq 0 $(( SNAPSHOT_COUNT - 2 ))); do
+
+                    SNAPSHOT=${SNAPSHOTS[$ID]}
+
+                    THIS_DATE=`snapshot2date "$SNAPSHOT"`
+                    THIS_TIMESTAMP=`date2timestamp "$THIS_DATE"`
+                    THIS_AGE=$(( NOW_TIMESTAMP - THIS_TIMESTAMP ))
+
+                    if [ $THIS_AGE -gt 86400 ]; then
+
+                        log_message "Will be pre-expired in next release (keeping $SOURCE_ROOT/${SNAPSHOTS[-1]}): $SOURCE_ROOT/$SNAPSHOT"
+
+                    fi
+
+                done
+
+            fi
+
+        done
+
+        SNAPSHOTS=(`find "$SOURCE_ROOT" -mindepth 1 -maxdepth 1 -type d -regex '.*/[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][-T][0-9][0-9][0-9][0-9][0-9][0-9]' -exec basename '{}' \; | sort`)
+        SNAPSHOT_COUNT=${#SNAPSHOTS[@]}
         ACCUM_GAP=0
 
-        # TODO: auto-expire all but last snapshot for each day beyond yesterday
 
         SOURCE_NAME="$(basename "$SOURCE_ROOT")"
         SOURCE_FILE="$BACKUP_ROOT/sources/$SOURCE_NAME"
