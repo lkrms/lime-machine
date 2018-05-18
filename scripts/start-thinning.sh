@@ -52,6 +52,7 @@ for TARGET_FILE in `get_targets`; do
 
         log_message "Looking for expired snapshots in $SOURCE_ROOT..."
 
+        PRE_EXPIRED_COUNT=0
         EXPIRED_COUNT=0
         THIN_COUNT=0
         NOW_TIMESTAMP=`now2timestamp`
@@ -76,7 +77,12 @@ for TARGET_FILE in `get_targets`; do
 
                     if [ $THIS_AGE -gt 86400 ]; then
 
-                        log_message "Will be pre-expired in next release (keeping $SOURCE_ROOT/${SNAPSHOTS[-1]}): $SOURCE_ROOT/$SNAPSHOT"
+                        SNAPSHOT_ROOT="$SOURCE_ROOT/$SNAPSHOT"
+                        SNAPSHOT_NEW_ROOT="$SOURCE_ROOT/.expired.$SNAPSHOT"
+
+                        mv "$SNAPSHOT_ROOT" "$SNAPSHOT_NEW_ROOT"
+
+                        (( PRE_EXPIRED_COUNT++ ))
 
                     fi
 
@@ -89,7 +95,6 @@ for TARGET_FILE in `get_targets`; do
         SNAPSHOTS=(`find "$SOURCE_ROOT" -mindepth 1 -maxdepth 1 -type d -regex '.*/[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][-T][0-9][0-9][0-9][0-9][0-9][0-9]' -exec basename '{}' \; | sort`)
         SNAPSHOT_COUNT=${#SNAPSHOTS[@]}
         ACCUM_GAP=0
-
 
         SOURCE_NAME="$(basename "$SOURCE_ROOT")"
         SOURCE_FILE="$BACKUP_ROOT/sources/$SOURCE_NAME"
@@ -184,12 +189,20 @@ for TARGET_FILE in `get_targets`; do
 
         done
 
-        log_message "$SNAPSHOT_COUNT snapshots found. $THIN_COUNT paths identified for removal from non-current snapshots. $EXPIRED_COUNT snapshots have expired and will be removed."
+        log_message "$SNAPSHOT_COUNT snapshots found after pre-expiring $PRE_EXPIRED_COUNT snapshots. $THIN_COUNT paths identified for removal from within non-current snapshots. $EXPIRED_COUNT snapshots have expired and will be removed."
 
     done
 
     # start one subshell per target (fastest processing with minimal hard drive thrashing)
     (
+        for SNAPSHOT_ROOT in `find "$TARGET_MOUNT_POINT/snapshots" -mindepth 2 -maxdepth 2 -type d -name '.expired.*' | sort`; do
+
+            log_message "Completing removal of previously expired snapshot at $SNAPSHOT_ROOT..."
+
+            rm -Rf "$SNAPSHOT_ROOT"
+
+        done
+
         for SNAPSHOT_ROOT in ${EXPIRED_SNAPSHOTS[@]}; do
 
             log_message "Removing $SNAPSHOT_ROOT..."
@@ -207,14 +220,6 @@ for TARGET_FILE in `get_targets`; do
                 rm -Rf "$SNAPSHOT_ROOT"
 
             fi
-
-        done
-
-        for SNAPSHOT_ROOT in `find "$TARGET_MOUNT_POINT/snapshots" -mindepth 2 -maxdepth 2 -type d -name '.expired.*' | sort`; do
-
-            log_message "Completing removal of previously expired snapshot at $SNAPSHOT_ROOT..."
-
-            rm -Rf "$SNAPSHOT_ROOT"
 
         done
 
