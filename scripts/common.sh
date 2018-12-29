@@ -212,3 +212,9 @@ function get_sources {
 
 }
 
+function get_used_space {
+
+    df "$TARGET_MOUNT_POINT" | tail -1 | awk '{print $5}' | sed 's/[^0-9]//g'
+
+}
+

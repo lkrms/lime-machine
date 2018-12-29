@@ -224,6 +224,19 @@ for TARGET_FILE in `get_targets`; do
         done
 
         log_message "Thinning complete for target $TARGET_NAME."
+
+        if [ -n "$TARGET_MAXIMUM_USAGE" ]; then
+
+            CURRENT_USAGE="$(get_used_space)"
+
+            if [ "$CURRENT_USAGE" -gt "$TARGET_MAXIMUM_USAGE" ]; then
+
+                log_message "Target $TARGET_NAME is ${CURRENT_USAGE}% full. Removing eligible snapshots until usage is ${TARGET_MAXIMUM_USAGE}% or lower."
+
+            fi
+
+        fi
+
     ) &
 
 done
