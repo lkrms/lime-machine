@@ -41,6 +41,8 @@ for TARGET_FILE in `get_targets`; do
     TARGET_MOUNT_CHECK=1
     TARGET_ATTEMPT_MOUNT=0
     TARGET_UNMOUNT=0
+    TARGET_MAXIMUM_USAGE=95
+    TARGET_MINIMUM_PURGE_AGE=31536000
 
     . "$TARGET_FILE"
 
@@ -232,6 +234,34 @@ for TARGET_FILE in `get_targets`; do
             if [ "$CURRENT_USAGE" -gt "$TARGET_MAXIMUM_USAGE" ]; then
 
                 log_message "Target $TARGET_NAME is ${CURRENT_USAGE}% full. Removing eligible snapshots until usage is ${TARGET_MAXIMUM_USAGE}% or lower."
+
+                for SNAPSHOT_DATE in $(find "$TARGET_MOUNT_POINT/snapshots" -mindepth 2 -maxdepth 2 -type d -regex '.*/[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][-T][0-9][0-9][0-9][0-9][0-9][0-9]' -exec basename '{}' \; | sort | uniq); do
+
+                    THIS_DATE="$(snapshot2date "$SNAPSHOT_DATE")"
+                    THIS_TIMESTAMP=$(date2timestamp "$THIS_DATE")
+                    NOW_TIMESTAMP=$(now2timestamp)
+                    THIS_AGE=$(( NOW_TIMESTAMP - THIS_TIMESTAMP ))
+
+                    if [ "$THIS_AGE" -ge "$TARGET_MINIMUM_PURGE_AGE" ]; then
+
+                        log_message "Removing snapshot(s) with timestamp: $SNAPSHOT_DATE"
+
+                        CURRENT_USAGE="$(get_used_space)"
+
+                        if [ "$CURRENT_USAGE" -gt "$TARGET_MAXIMUM_USAGE" ]; then
+
+                            log_message "Target $TARGET_NAME is now ${CURRENT_USAGE}% full. Continuing to remove eligible snapshots."
+
+                        else
+
+                            log_message "Target $TARGET_NAME is now ${CURRENT_USAGE}% full. No further snapshots will be removed."
+                            break
+
+                        fi
+
+                    fi
+
+                done
 
             fi
 
