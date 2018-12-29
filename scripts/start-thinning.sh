@@ -41,7 +41,7 @@ for TARGET_FILE in `get_targets`; do
     TARGET_MOUNT_CHECK=1
     TARGET_ATTEMPT_MOUNT=0
     TARGET_UNMOUNT=0
-    TARGET_MAXIMUM_USAGE=95
+    TARGET_MAXIMUM_USAGE=
     TARGET_MINIMUM_PURGE_AGE=31536000
 
     . "$TARGET_FILE"
@@ -241,6 +241,9 @@ for TARGET_FILE in `get_targets`; do
                     THIS_TIMESTAMP=$(date2timestamp "$THIS_DATE")
                     NOW_TIMESTAMP=$(now2timestamp)
                     THIS_AGE=$(( NOW_TIMESTAMP - THIS_TIMESTAMP ))
+
+                    # in case percentages / limits have changed since we started
+                    . "$TARGET_FILE"
 
                     if [ "$THIS_AGE" -ge "$TARGET_MINIMUM_PURGE_AGE" ]; then
 
