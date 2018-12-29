@@ -250,8 +250,8 @@ for TARGET_FILE in `get_targets`; do
 
                             SNAPSHOT_NEW_ROOT="$(dirname "$SNAPSHOT_ROOT")/.expired.$(basename "$SNAPSHOT_ROOT")"
 
-                            echo mv "$SNAPSHOT_ROOT" "$SNAPSHOT_NEW_ROOT"
-                            echo rm -Rf "$SNAPSHOT_NEW_ROOT"
+                            mv "$SNAPSHOT_ROOT" "$SNAPSHOT_NEW_ROOT"
+                            rm -Rf "$SNAPSHOT_NEW_ROOT"
 
                         done < <(find "$TARGET_MOUNT_POINT/snapshots" -mindepth 2 -maxdepth 2 -type d -name "$SNAPSHOT_DATE" -print0)
 
