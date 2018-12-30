@@ -230,10 +230,15 @@ for TARGET_FILE in `get_targets`; do
         if [ -n "$TARGET_MAXIMUM_USAGE" ]; then
 
             CURRENT_USAGE="$(get_used_space)"
+            INITIAL_USAGE="$CURRENT_USAGE"
 
             if [ "$CURRENT_USAGE" -gt "$TARGET_MAXIMUM_USAGE" ]; then
 
                 log_message "Target $TARGET_NAME is ${CURRENT_USAGE}% full. Removing eligible snapshots until usage is ${TARGET_MAXIMUM_USAGE}% or lower."
+
+                SNAPSHOTS_REMOVED=
+                SNAPSHOTS_REMOVED_COUNT=0
+                USAGE_RESOLVED=0
 
                 for SNAPSHOT_DATE in $(find "$TARGET_MOUNT_POINT/snapshots" -mindepth 2 -maxdepth 2 -type d -regex '.*/[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][-T][0-9][0-9][0-9][0-9][0-9][0-9]' -exec basename '{}' \; | sort | uniq); do
 
@@ -251,6 +256,9 @@ for TARGET_FILE in `get_targets`; do
 
                         while read -d $'\0' SNAPSHOT_ROOT; do
 
+                            SNAPSHOTS_REMOVED="${SNAPSHOTS_REMOVED}${SNAPSHOT_ROOT}\n"
+                            (( SNAPSHOTS_REMOVED_COUNT++ ))
+
                             SNAPSHOT_NEW_ROOT="$(dirname "$SNAPSHOT_ROOT")/.expired.$(basename "$SNAPSHOT_ROOT")"
 
                             mv "$SNAPSHOT_ROOT" "$SNAPSHOT_NEW_ROOT"
@@ -267,6 +275,7 @@ for TARGET_FILE in `get_targets`; do
                         else
 
                             log_message "Target $TARGET_NAME is now ${CURRENT_USAGE}% full. No further snapshots will be removed."
+                            USAGE_RESOLVED=1
                             break
 
                         fi
@@ -274,6 +283,30 @@ for TARGET_FILE in `get_targets`; do
                     fi
 
                 done
+
+                SUBJECT="target $(hostname -s)/$TARGET_NAME usage is ${CURRENT_USAGE}%"
+                MESSAGE="$SNAPSHOTS_REMOVED_COUNT snapshot(s) removed to reduce usage on this target from ${INITIAL_USAGE}% to ${CURRENT_USAGE}%.\n\n"
+                NOTIFY="$NOTIFY_EMAIL"
+
+                if [ "$USAGE_RESOLVED" -eq "1" ]; then
+
+                    SUBJECT="Notice: $SUBJECT"
+
+                else
+
+                    SUBJECT="ACTION REQUIRED: $SUBJECT"
+                    MESSAGE="${MESSAGE}This usage is higher than the configured maximum of ${TARGET_MAXIMUM_USAGE}%. Further action is therefore required.\n\n"
+                    NOTIFY="$ERROR_EMAIL"
+
+                fi
+
+                if [ "$SNAPSHOTS_REMOVED_COUNT" -gt "0" ]; then
+
+                    MESSAGE="${MESSAGE}Snapshots removed:\n\n${SNAPSHOTS_REMOVED}\n"
+
+                fi
+
+                echo -e "$MESSAGE" | mail -s "$SUBJECT" -r "$FROM_EMAIL" "$NOTIFY"
 
             fi
 
