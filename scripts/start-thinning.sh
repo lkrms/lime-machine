@@ -110,6 +110,8 @@ for TARGET_FILE in `get_targets`; do
 
             if [ "${#SOURCE_ALWAYS_THIN[@]}" -gt "0" ]; then
 
+                shopt -s nullglob
+
                 # don't inspect the most recent snapshot
                 for ID in $(seq 0 $(( SNAPSHOT_COUNT - 2 ))); do
 
@@ -117,18 +119,30 @@ for TARGET_FILE in `get_targets`; do
 
                     for THIN_PATH in "${SOURCE_ALWAYS_THIN[@]}"; do
 
-                        FULL_THIN_PATH="${SOURCE_ROOT}/${SNAPSHOT}${THIN_PATH}"
+                        FULL_THIN_GLOB="${SOURCE_ROOT}/${SNAPSHOT}${THIN_PATH}"
 
-                        if [ -e "$FULL_THIN_PATH" ]; then
+                        OLDIFS="$IFS"
+                        IFS=$'\n'
 
-                            EXPIRED_SNAPSHOTS=("${EXPIRED_SNAPSHOTS[@]}" "$FULL_THIN_PATH")
-                            (( THIN_COUNT++ ))
+                        for FULL_THIN_PATH in $FULL_THIN_GLOB; do
 
-                        fi
+                            if [ -e "$FULL_THIN_PATH" ]; then
+
+                                #EXPIRED_SNAPSHOTS=("${EXPIRED_SNAPSHOTS[@]}" "$FULL_THIN_PATH")
+                                #(( THIN_COUNT++ ))
+                                echo "Found path to thin: $FULL_THIN_PATH"
+
+                            fi
+
+                        done
+
+                        IFS="$OLDIFS"
 
                     done
 
                 done
+
+                shopt -u nullglob
 
             fi
 
