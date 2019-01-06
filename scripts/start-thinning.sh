@@ -128,9 +128,8 @@ for TARGET_FILE in `get_targets`; do
 
                             if [ -e "$FULL_THIN_PATH" ]; then
 
-                                #EXPIRED_SNAPSHOTS=("${EXPIRED_SNAPSHOTS[@]}" "$FULL_THIN_PATH")
-                                #(( THIN_COUNT++ ))
-                                echo "Found path to thin: $FULL_THIN_PATH"
+                                EXPIRED_SNAPSHOTS=("${EXPIRED_SNAPSHOTS[@]}" "$FULL_THIN_PATH")
+                                (( THIN_COUNT++ ))
 
                             fi
 
