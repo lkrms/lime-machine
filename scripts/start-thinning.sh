@@ -32,7 +32,7 @@ fi
 
 EXPIRED_TOTAL=0
 
-for TARGET_FILE in `get_targets`; do
+while read -d $'\0' TARGET_FILE; do
 
     EXPIRED_SNAPSHOTS=()
 
@@ -327,7 +327,7 @@ for TARGET_FILE in `get_targets`; do
 
     ) &
 
-done
+done < <(get_targets)
 
 if [ -z "$LIME_MACHINE_SHUTDOWN_PENDING" ]; then
 

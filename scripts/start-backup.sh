@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# lime-machine: Linux backup software inspired by Time Machine on OS X.
+# lime-machine: Linux backup software inspired by Time Machine on macOS.
 # Copyright (c) 2013-2018 Luke Arms
 #
 # This program is free software: you can redistribute it and/or modify
@@ -21,10 +21,10 @@
 trap "" SIGHUP
 
 # source shared functions, variables, etc.
-SCRIPT_DIR=$(cd "$(dirname "$0")"; pwd)
+SCRIPT_DIR="$(cd "$(dirname "$0")"; pwd -P)"
 . "$SCRIPT_DIR/common.sh"
 
-EXCLUDE_PATH=$CONFIG_DIR/exclude.always
+EXCLUDE_PATH="$CONFIG_DIR/exclude.always"
 
 # check for the existence of exclude.always
 if [ ! -f "$EXCLUDE_PATH" ]; then
@@ -44,16 +44,16 @@ if [ ! -f "$EXCLUDE_PATH" ]; then
 fi
 
 # create/update our server-specific shadow copy creation script
-sed "s/{HOSTNAME}/$(hostname -s)/g" $BACKUP_ROOT/vss/.create_copy.cmd.template > $BACKUP_ROOT/vss/create_copy.cmd
+sed "s/{HOSTNAME}/$(hostname -s)/g" "$BACKUP_ROOT/vss/.create_copy.cmd.template" > "$BACKUP_ROOT/vss/create_copy.cmd"
 
 # rsync source paths may be singular (a string) or multiple (an array).
 # This function takes a user-defined source path (in the $SOURCE_PATH or $SOURCE_SUB_PATH global) and outputs a string ready for use in an rsync command.
 # If present, the value of the first parameter is prepended to each path in the final string.
 function sanitise_rsync_source {
 
-	local SOURCES SOURCE SOURCE_VAR=SOURCE_PATH PREFIX=$1 SANITISED=
+	local SOURCES SOURCE SOURCE_VAR=SOURCE_PATH PREFIX="$1" SANITISED=
 
-	if [ $SOURCE_TYPE = "rsync_shadow" ]; then
+	if [ "$SOURCE_TYPE" = "rsync_shadow" ]; then
 
 		SOURCE_VAR=SOURCE_SUB_PATH
 
@@ -72,18 +72,18 @@ function sanitise_rsync_source {
 	else
 
 		# singular sources get a trailing slash (saves one level of directory nesting)
-		SANITISED=${PREFIX}${!SOURCE_VAR}/
+		SANITISED="${PREFIX}${!SOURCE_VAR}/"
 
 	fi
 
 	# remove a leading space (i.e. if added by the loop above)
-	echo -n $SANITISED | sed 's/^ //'
+	echo -n "$SANITISED" | sed 's/^ //'
 
 }
 
 function do_rsync {
 
-	local SOURCE=$1 OPTIONS
+	local SOURCE="$1" OPTIONS
 
 	shift
 	OPTIONS=("$@")
@@ -121,29 +121,29 @@ function do_rsync {
 
 	log_source "Starting rsync now. stdout:\n"
 
-	rsync -lrtv "${OPTIONS[@]}" --exclude-from "$EXCLUDE_PATH" --link-dest="$TARGET_MOUNT_POINT/latest/$SOURCE_NAME/" "$SOURCE" "$PENDING_TARGET/" >> "$SOURCE_LOG_FILE" 2>$TEMP_FILE
+	rsync -lrtv "${OPTIONS[@]}" --exclude-from "$EXCLUDE_PATH" --link-dest="$TARGET_MOUNT_POINT/latest/$SOURCE_NAME/" "$SOURCE" "$PENDING_TARGET/" >> "$SOURCE_LOG_FILE" 2>"$TEMP_FILE"
 
 	STATUS=$?
-	ERR=`< $TEMP_FILE`
+	ERR="$(< "$TEMP_FILE")"
 
 	log_source "Returned from rsync. stderr:\n\n$ERR\n\nExit status: $STATUS\n"
 
-	if [ $STATUS -eq 0 ]; then
+	if [ "$STATUS" -eq "0" ]; then
 
 		SUCCESS=1
 		SUBJECT="Success: $SUBJECT"
-		MESSAGE="No errors were reported.\n\nSee $SOURCE_LOG_FILE on `hostname -s` for more information."
+		MESSAGE="No errors were reported.\n\nSee $SOURCE_LOG_FILE on $(hostname -s) for more information."
 
-	elif [ $STATUS -eq 23 -o $STATUS -eq 24 ]; then
+	elif [ "$STATUS" -eq "23" -o "$STATUS" -eq "24" ]; then
 
 		SUCCESS=1
 		SUBJECT="Success (partial transfer): $SUBJECT"
-		MESSAGE="Partial transfer reported (exit status: $STATUS).\n\nOutput collected from stderr is below. See $SOURCE_LOG_FILE on `hostname -s` for more information.\n\n$ERR"
+		MESSAGE="Partial transfer reported (exit status: $STATUS).\n\nOutput collected from stderr is below. See $SOURCE_LOG_FILE on $(hostname -s) for more information.\n\n$ERR"
 
 	else
 
 		SUBJECT="FAILURE: $SUBJECT"
-		MESSAGE="Exit status: $STATUS.\n\nOutput collected from stderr is below. See $SOURCE_LOG_FILE on `hostname -s` for more information.\n\nNOTE: $PENDING_TARGET will not be cleaned up automatically.\n\n$ERR"
+		MESSAGE="Exit status: $STATUS.\n\nOutput collected from stderr is below. See $SOURCE_LOG_FILE on $(hostname -s) for more information.\n\nNOTE: $PENDING_TARGET will not be cleaned up automatically.\n\n$ERR"
 
 	fi
 
@@ -184,14 +184,14 @@ function do_mysql {
 
 	log_source "Retrieving list of databases."
 
-	SOURCE_DB_LIST=`mysql --host="$MYSQL_HOST" --port=$MYSQL_PORT --user="$SOURCE_USER" --password="$SOURCE_PASSWORD" --batch --skip-column-names --execute="show databases" 2>$TEMP_FILE | grep -Ev '^(mysql|information_schema|performance_schema|test|sys)$'`
+	SOURCE_DB_LIST="$(mysql --host="$MYSQL_HOST" --port=$MYSQL_PORT --user="$SOURCE_USER" --password="$SOURCE_PASSWORD" --batch --skip-column-names --execute="show databases" 2>"$TEMP_FILE" | grep -Ev '^(mysql|information_schema|performance_schema|test|sys)$')"
 
 	STATUS=$?
-	ERR=`< $TEMP_FILE`
+	ERR="$(< "$TEMP_FILE")"
 
 	log_source "Returned from mysql. stderr:\n\n$ERR\n\nExit status: $STATUS\n"
 
-	if [ $STATUS -ne 0 ]; then
+	if [ "$STATUS" -ne "0" ]; then
 
 		SUCCESS=0
 		SOURCE_DB_LIST=
@@ -208,14 +208,14 @@ function do_mysql {
 
 			log_source "Starting mysqldump now."
 
-			mysqldump --host="$MYSQL_HOST" --port=$MYSQL_PORT --user="$SOURCE_USER" --password="$SOURCE_PASSWORD" "${OPTIONS[@]}" "$SOURCE_DB" 2>$TEMP_FILE | gzip > "$PENDING_TARGET/${SOURCE_DB}_${DATE}.sql.gz"
+			mysqldump --host="$MYSQL_HOST" --port=$MYSQL_PORT --user="$SOURCE_USER" --password="$SOURCE_PASSWORD" "${OPTIONS[@]}" "$SOURCE_DB" 2>"$TEMP_FILE" | gzip > "$PENDING_TARGET/${SOURCE_DB}_${DATE}.sql.gz"
 
 			STATUS=${PIPESTATUS[0]}
-			THIS_ERR=`< $TEMP_FILE`
+			THIS_ERR="$(< "$TEMP_FILE")"
 
 			log_source "Returned from mysqldump. stderr:\n\n$THIS_ERR\n\nExit status: $STATUS\n"
 
-			if [ $STATUS -ne 0 ]; then
+			if [ "$STATUS" -ne "0" ]; then
 
 				SUCCESS=0
 				ERR="${ERR}stderr output for $SOURCE_DB (exit status $STATUS):\n$THIS_ERR\n\n"
@@ -228,7 +228,7 @@ function do_mysql {
 
 	MESSAGE="Databases discovered:\n$SOURCE_DB_LIST\n\n"
 
-	if [ $SUCCESS -eq 0 ]; then
+	if [ "$SUCCESS" -eq "0" ]; then
 
 		SUBJECT="FAILURE: $SUBJECT"
 		MESSAGE="One or more MySQL backup operations failed. Output collected from stderr is below.\n\nNOTE: $PENDING_TARGET will not be cleaned up automatically.\n\n${MESSAGE}${ERR}"
@@ -246,33 +246,33 @@ function do_mysql {
 
 function do_postgres {
 
-	export PGPASSFILE=`mktemp`
-	echo "*:*:*:*:$SOURCE_PASSWORD" > $PGPASSFILE
+	export PGPASSFILE="$(mktemp)"
+	echo "*:*:*:*:$SOURCE_PASSWORD" > "$PGPASSFILE"
 
-	log_source $(dump_args pg_dumpall --host="$SOURCE_HOST" --port=$SOURCE_PORT --username="$SOURCE_USER" --no-password)
+	log_source "$(dump_args pg_dumpall --host="$SOURCE_HOST" --port=$SOURCE_PORT --username="$SOURCE_USER" --no-password)"
 
 	log_source "Starting pg_dumpall now."
 
-	pg_dumpall --host="$SOURCE_HOST" --port=$SOURCE_PORT --username="$SOURCE_USER" --no-password 2>$TEMP_FILE | gzip > "$PENDING_TARGET/all_databases_${DATE}.sql.gz"
+	pg_dumpall --host="$SOURCE_HOST" --port=$SOURCE_PORT --username="$SOURCE_USER" --no-password 2>"$TEMP_FILE" | gzip > "$PENDING_TARGET/all_databases_${DATE}.sql.gz"
 
 	STATUS=${PIPESTATUS[0]}
-	ERR=`< $TEMP_FILE`
+	ERR="$(< "$TEMP_FILE")"
 
 	log_source "Returned from pg_dumpall. stderr:\n\n$ERR\n\nExit status: $STATUS\n"
 
-	rm $PGPASSFILE
+	rm "$PGPASSFILE"
 
 	if [ $STATUS -ne 0 ]; then
 
 		SUCCESS=0
 		SUBJECT="FAILURE: $SUBJECT"
-		MESSAGE="Exit status: $STATUS.\n\nOutput collected from stderr is below. See $SOURCE_LOG_FILE on `hostname -s` for more information.\n\nNOTE: $PENDING_TARGET will not be cleaned up automatically.\n\n$ERR"
+		MESSAGE="Exit status: $STATUS.\n\nOutput collected from stderr is below. See $SOURCE_LOG_FILE on $(hostname -s) for more information.\n\nNOTE: $PENDING_TARGET will not be cleaned up automatically.\n\n$ERR"
 
 	else
 
 		SUCCESS=1
 		SUBJECT="Success: $SUBJECT"
-		MESSAGE="No errors were reported.\n\nSee $SOURCE_LOG_FILE on `hostname -s` for more information."
+		MESSAGE="No errors were reported.\n\nSee $SOURCE_LOG_FILE on $(hostname -s) for more information."
 
 	fi
 
@@ -282,7 +282,7 @@ function do_postgres {
 
 function do_finalise {
 
-	if [ $SUCCESS -eq 1 ]; then
+	if [ "$SUCCESS" -eq "1" ]; then
 
 		RESULT="SUCCEEDED"
 		NOTIFY="$NOTIFY_EMAIL"
@@ -301,7 +301,7 @@ function do_finalise {
 
 	log_source "Result notification sent:\n\nTo: $NOTIFY\nSubject: $SUBJECT\nMessage:\n$MESSAGE.\n"
 
-	if [ $SUCCESS -eq 1 ]; then
+	if [ "$SUCCESS" -eq "1" ]; then
 
 		mv "$PENDING_TARGET" "$TARGET_MOUNT_POINT/snapshots/$SOURCE_NAME"
 		rm -f "$TARGET_MOUNT_POINT/latest/$SOURCE_NAME"
@@ -334,14 +334,14 @@ function do_finalise {
 
 						touch "${RUN_DIR}/rsync_shadow_closed_${SOURCE_NAME}_${SHADOW_DATE}"
 
-						ssh -vF "$CONFIG_DIR/ssh_config" -p $SSH_PORT -i "$SSH_KEY" "$SSH_USER@$SOURCE_HOST" "//`hostname -s`/vss/close_copy.cmd $SHADOW_PATH $SHADOW_DATE" > $TEMP_FILE 2>&1
+						ssh -vF "$CONFIG_DIR/ssh_config" -p $SSH_PORT -i "$SSH_KEY" "$SSH_USER@$SOURCE_HOST" "//$(hostname -s)/vss/close_copy.cmd '$SHADOW_PATH' '$SHADOW_DATE'" > "$TEMP_FILE" 2>&1
 
 						STATUS=$?
-						ERR=`< $TEMP_FILE`
+						ERR="$(< "$TEMP_FILE")"
 
 						log_source "Returned from close_copy.cmd. Output:\n\n$ERR\n\nExit status: $STATUS\n"
 
-						if [ $STATUS -ne 0 ]; then
+						if [ "$STATUS" -ne "0" ]; then
 
 							SUBJECT="WARNING: $SUBJECT"
 							MESSAGE="Unable to close shadow copy. Exit status: $STATUS.\n\nOutput collected from stderr is below.\n\n$ERR"
@@ -374,9 +374,9 @@ function do_finalise {
 
 	fi
 
-	rm $TEMP_FILE
+	rm "$TEMP_FILE"
 
-	if ! pidof -x -o $$ -o $PPID -o $(bash -c 'echo $PPID') $SCRIPT_NAME >/dev/null; then
+	if ! pidof -x -o $$ -o $PPID -o "$(bash -c 'echo $PPID')" "$SCRIPT_NAME" >/dev/null; then
 
 		if [ ! -z "$SSH_KILL_REGEX" ]; then
 
@@ -386,13 +386,13 @@ function do_finalise {
 
 		log_message "Backup sequence complete for all target volumes."
 
-		if [ $SHUTDOWN_AFTER_BACKUP -eq 1 ]; then
+		if [ "$SHUTDOWN_AFTER_BACKUP" -eq "1" ]; then
 
 			export LIME_MACHINE_SHUTDOWN_PENDING=1
 
 			log_message "Shutdown requested. Initiating snapshot thinning first."
 
-			$SCRIPT_DIR/start-thinning.sh
+			"$SCRIPT_DIR/start-thinning.sh"
 
 		else
 
@@ -413,7 +413,7 @@ fi
 
 BATCH_DATE=`date "+%Y-%m-%d-%H%M%S"`
 
-for TARGET_FILE in `get_targets`; do
+while read -d $'\0' TARGET_FILE; do
 
 	TARGET_NAME=`basename "$TARGET_FILE"`
 	TARGET_MOUNT_POINT=
@@ -432,30 +432,7 @@ for TARGET_FILE in `get_targets`; do
 	mkdir -p "$TARGET_MOUNT_POINT/latest"
 	mkdir -p "$TARGET_MOUNT_POINT/logs"
 
-	if [ $# -gt 0 ]; then
-
-		SOURCE_FILES=$@
-
-	else
-
-		SOURCE_FILES=`get_sources`
-
-	fi
-
-	for SOURCE_FILE in $SOURCE_FILES; do
-
-		if [ ! -f "$SOURCE_FILE" ]; then
-
-			SOURCE_FILE="$BACKUP_ROOT/sources/$SOURCE_FILE"
-
-			if [ ! -f "$SOURCE_FILE" ]; then
-
-				log_error "Unable to find source file $SOURCE_FILE. Ignoring this source."
-				continue
-
-			fi
-
-		fi
+	while read -d $'\0' SOURCE_FILE; do
 
 		SOURCE_NAME=`basename "$SOURCE_FILE"`
 
@@ -501,7 +478,7 @@ for TARGET_FILE in `get_targets`; do
 		MESSAGE=
 
 		SOURCE_LOG_FILE="$TARGET_MOUNT_POINT/logs/$SOURCE_NAME/$SOURCE_NAME-$DATE.log"
-		TEMP_FILE=`mktemp`
+		TEMP_FILE="$(mktemp)" || exit 1
 		PENDING_TARGET="$TARGET_MOUNT_POINT/snapshots/.pending/$SOURCE_NAME/$DATE"
 
 		log_source "Backup operation commencing. Environment:\n\n`printenv`\n"
@@ -669,9 +646,35 @@ for TARGET_FILE in `get_targets`; do
 
 		fi
 
-	done
+	done < <(
 
-done
+		# if sources have been named on the command line, look them up and output null-terminated filenames
+		if [ "$#" -gt "0" ]; then
+
+			for SOURCE_NAME in "$@"; do
+
+				SOURCE_FILE="$BACKUP_ROOT/sources/$SOURCE_NAME"
+
+				if [ ! -f "$SOURCE_FILE" ]; then
+
+					log_error "Unable to find source file $SOURCE_FILE. Ignoring this source."
+					continue
+
+				fi
+
+				printf '%s\0' "$SOURCE_FILE"
+
+			done
+
+		else
+
+			get_sources
+
+		fi
+
+	)
+
+done < <(get_targets)
 
 touch "${RUN_DIR}/batch_started_${BATCH_DATE}_$$"
 
