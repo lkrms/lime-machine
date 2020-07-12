@@ -241,6 +241,12 @@ function get_sources() {
 
 function get_used_space() {
 
-    df "$TARGET_MOUNT_POINT" | tail -1 | awk '{print $5}' | sed 's/[^0-9]//g'
+    df --sync --output=pcent "$TARGET_MOUNT_POINT" | grep -Po '[[:space:]]*\K[0-9]+(?=%)'
+
+}
+
+function get_used_gb() {
+
+    df --sync --output=used -BG "$TARGET_MOUNT_POINT" | grep -Po '[[:space:]]*\K[0-9]+(?=G)'
 
 }

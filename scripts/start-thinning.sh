@@ -19,14 +19,17 @@
 
 trap "" SIGHUP
 
-SCRIPT_DIR=$(cd "$(dirname "$0")"; pwd)
+SCRIPT_DIR=$(
+    cd "$(dirname "$0")"
+    pwd
+)
 . "$SCRIPT_DIR/common.sh"
 
 # exit without error if another instance is already running
 if pidof -x -o $$ -o $PPID "$(basename "$0")" >/dev/null; then
 
-  log_message "Snapshot thinning is already in progress. Ignoring request to start thinning."
-  exit 0
+    log_message "Snapshot thinning is already in progress. Ignoring request to start thinning."
+    exit 0
 
 fi
 
@@ -36,7 +39,7 @@ while read -d $'\0' TARGET_FILE; do
 
     EXPIRED_SNAPSHOTS=()
 
-    TARGET_NAME=`basename "$TARGET_FILE"`
+    TARGET_NAME=$(basename "$TARGET_FILE")
     TARGET_MOUNT_POINT=
     TARGET_MOUNT_CHECK=1
     TARGET_ATTEMPT_MOUNT=0
@@ -50,32 +53,32 @@ while read -d $'\0' TARGET_FILE; do
 
     log_message "Found target volume for $TARGET_NAME at $TARGET_MOUNT_POINT. Initiating snapshot thinning for all sources."
 
-    for SOURCE_ROOT in `find "$TARGET_MOUNT_POINT/snapshots" -mindepth 1 -maxdepth 1 -type d ! -name ".empty" ! -name ".pending" | sort`; do
+    for SOURCE_ROOT in $(find "$TARGET_MOUNT_POINT/snapshots" -mindepth 1 -maxdepth 1 -type d ! -name ".empty" ! -name ".pending" | sort); do
 
         log_message "Looking for expired snapshots in $SOURCE_ROOT..."
 
         PRE_EXPIRED_COUNT=0
         EXPIRED_COUNT=0
         THIN_COUNT=0
-        NOW_TIMESTAMP=`now2timestamp`
+        NOW_TIMESTAMP=$(now2timestamp)
 
         # first, pre-expire all but the last snapshot on any given day
-        SNAPSHOT_DATES=(`find "$SOURCE_ROOT" -mindepth 1 -maxdepth 1 -type d -regex '.*/[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][-T][0-9][0-9][0-9][0-9][0-9][0-9]' -exec basename '{}' \; | cut -c 1-10 | sort -u`)
+        SNAPSHOT_DATES=($(find "$SOURCE_ROOT" -mindepth 1 -maxdepth 1 -type d -regex '.*/[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][-T][0-9][0-9][0-9][0-9][0-9][0-9]' -exec basename '{}' \; | cut -c 1-10 | sort -u))
 
         for SNAPSHOT_DATE in "${SNAPSHOT_DATES[@]}"; do
 
-            SNAPSHOTS=(`find "$SOURCE_ROOT" -mindepth 1 -maxdepth 1 -type d -regex '.*/[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][-T][0-9][0-9][0-9][0-9][0-9][0-9]' -name "$SNAPSHOT_DATE"'*' -exec basename '{}' \; | sort`)
+            SNAPSHOTS=($(find "$SOURCE_ROOT" -mindepth 1 -maxdepth 1 -type d -regex '.*/[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][-T][0-9][0-9][0-9][0-9][0-9][0-9]' -name "$SNAPSHOT_DATE"'*' -exec basename '{}' \; | sort))
             SNAPSHOT_COUNT=${#SNAPSHOTS[@]}
 
             if [ "$SNAPSHOT_COUNT" -gt "1" ]; then
 
-                for ID in $(seq 0 $(( SNAPSHOT_COUNT - 2 ))); do
+                for ID in $(seq 0 $((SNAPSHOT_COUNT - 2))); do
 
                     SNAPSHOT=${SNAPSHOTS[$ID]}
 
-                    THIS_DATE=`snapshot2date "$SNAPSHOT"`
-                    THIS_TIMESTAMP=`date2timestamp "$THIS_DATE"`
-                    THIS_AGE=$(( NOW_TIMESTAMP - THIS_TIMESTAMP ))
+                    THIS_DATE=$(snapshot2date "$SNAPSHOT")
+                    THIS_TIMESTAMP=$(date2timestamp "$THIS_DATE")
+                    THIS_AGE=$((NOW_TIMESTAMP - THIS_TIMESTAMP))
 
                     if [ $THIS_AGE -gt 86400 ]; then
 
@@ -84,7 +87,7 @@ while read -d $'\0' TARGET_FILE; do
 
                         mv "$SNAPSHOT_ROOT" "$SNAPSHOT_NEW_ROOT"
 
-                        (( PRE_EXPIRED_COUNT++ ))
+                        ((PRE_EXPIRED_COUNT++))
 
                     fi
 
@@ -94,7 +97,7 @@ while read -d $'\0' TARGET_FILE; do
 
         done
 
-        SNAPSHOTS=(`find "$SOURCE_ROOT" -mindepth 1 -maxdepth 1 -type d -regex '.*/[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][-T][0-9][0-9][0-9][0-9][0-9][0-9]' -exec basename '{}' \; | sort`)
+        SNAPSHOTS=($(find "$SOURCE_ROOT" -mindepth 1 -maxdepth 1 -type d -regex '.*/[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][-T][0-9][0-9][0-9][0-9][0-9][0-9]' -exec basename '{}' \; | sort))
         SNAPSHOT_COUNT=${#SNAPSHOTS[@]}
         ACCUM_GAP=0
 
@@ -113,7 +116,7 @@ while read -d $'\0' TARGET_FILE; do
                 shopt -s nullglob
 
                 # don't inspect the most recent snapshot
-                for ID in $(seq 0 $(( SNAPSHOT_COUNT - 2 ))); do
+                for ID in $(seq 0 $((SNAPSHOT_COUNT - 2))); do
 
                     SNAPSHOT=${SNAPSHOTS[$ID]}
 
@@ -129,7 +132,7 @@ while read -d $'\0' TARGET_FILE; do
                             if [ -e "$FULL_THIN_PATH" ]; then
 
                                 EXPIRED_SNAPSHOTS=("${EXPIRED_SNAPSHOTS[@]}" "$FULL_THIN_PATH")
-                                (( THIN_COUNT++ ))
+                                ((THIN_COUNT++))
 
                             fi
 
@@ -147,17 +150,17 @@ while read -d $'\0' TARGET_FILE; do
 
         fi
 
-        for ID in `seq 0 $(( SNAPSHOT_COUNT - 1 ))`; do
+        for ID in $(seq 0 $((SNAPSHOT_COUNT - 1))); do
 
             SNAPSHOT=${SNAPSHOTS[$ID]}
 
-            THIS_DATE=`snapshot2date "$SNAPSHOT"`
-            THIS_TIMESTAMP=`date2timestamp "$THIS_DATE"`
+            THIS_DATE=$(snapshot2date "$SNAPSHOT")
+            THIS_TIMESTAMP=$(date2timestamp "$THIS_DATE")
 
             # only proceed if this isn't the first or last snapshot
-            if [ $ID -gt 0 -a $(( ID + 1 )) -lt $SNAPSHOT_COUNT ]; then
+            if [ $ID -gt 0 -a $((ID + 1)) -lt $SNAPSHOT_COUNT ]; then
 
-                THIS_AGE=$(( NOW_TIMESTAMP - THIS_TIMESTAMP ))
+                THIS_AGE=$((NOW_TIMESTAMP - THIS_TIMESTAMP))
 
                 # these MAX_GAP values factor in a 5% tolerance for variation in snapshot times
                 if [ $THIS_AGE -le 86400 ]; then
@@ -177,10 +180,10 @@ while read -d $'\0' TARGET_FILE; do
 
                 fi
 
-                THIS_GAP=$(( THIS_TIMESTAMP - LAST_TIMESTAMP + ACCUM_GAP ))
+                THIS_GAP=$((THIS_TIMESTAMP - LAST_TIMESTAMP + ACCUM_GAP))
                 ACCUM_GAP=0
 
-                NEXT_GAP=$(( $(date2timestamp "$(snapshot2date "${SNAPSHOTS[$(( ID + 1 ))]}")") - THIS_TIMESTAMP ))
+                NEXT_GAP=$(($(date2timestamp "$(snapshot2date "${SNAPSHOTS[$((ID + 1))]}")") - THIS_TIMESTAMP))
 
                 # This snapshot is considered expired if:
                 #
@@ -189,12 +192,12 @@ while read -d $'\0' TARGET_FILE; do
                 #
                 # Because (2) implies (1), this is a very simple test.
                 #
-                if [ $(( THIS_GAP + NEXT_GAP )) -lt $MAX_GAP ]; then
+                if [ $((THIS_GAP + NEXT_GAP)) -lt $MAX_GAP ]; then
 
                     EXPIRED_SNAPSHOTS=("${EXPIRED_SNAPSHOTS[@]}" "$SOURCE_ROOT/$SNAPSHOT")
                     ACCUM_GAP=$THIS_GAP
-                    (( EXPIRED_COUNT++ ))
-                    (( EXPIRED_TOTAL++ ))
+                    ((EXPIRED_COUNT++))
+                    ((EXPIRED_TOTAL++))
 
                 fi
 
@@ -210,11 +213,15 @@ while read -d $'\0' TARGET_FILE; do
 
     # start one subshell per target (fastest processing with minimal hard drive thrashing)
     (
-        for SNAPSHOT_ROOT in `find "$TARGET_MOUNT_POINT/snapshots" -mindepth 2 -maxdepth 2 -type d -name '.expired.*' | sort`; do
+        INITIAL_USED=$(get_used_gb)
+        log_message "Space in use on target volume $TARGET_MOUNT_POINT before thinning: ${INITIAL_USED}G"
+
+        for SNAPSHOT_ROOT in $(find "$TARGET_MOUNT_POINT/snapshots" -mindepth 2 -maxdepth 2 -type d -name '.expired.*' | sort); do
 
             log_message "Completing removal of previously expired snapshot at $SNAPSHOT_ROOT..."
 
-            rm -Rf "$SNAPSHOT_ROOT"
+            sudo rm -Rf "$SNAPSHOT_ROOT"
+            log_message "Space in use on target volume $TARGET_MOUNT_POINT: $(get_used_gb)G"
 
         done
 
@@ -228,17 +235,21 @@ while read -d $'\0' TARGET_FILE; do
                 SNAPSHOT_NEW_ROOT="$(dirname "$SNAPSHOT_ROOT")/.expired.$(basename "$SNAPSHOT_ROOT")"
 
                 mv "$SNAPSHOT_ROOT" "$SNAPSHOT_NEW_ROOT"
-                rm -Rf "$SNAPSHOT_NEW_ROOT"
+                sudo rm -Rf "$SNAPSHOT_NEW_ROOT"
 
             else
 
-                rm -Rf "$SNAPSHOT_ROOT"
+                sudo rm -Rf "$SNAPSHOT_ROOT"
 
             fi
 
+            log_message "Space in use on target volume $TARGET_MOUNT_POINT: $(get_used_gb)G"
+
         done
 
+        USED_NOW=$(get_used_gb)
         log_message "Thinning complete for target $TARGET_NAME."
+        log_message "Space in use on target volume $TARGET_MOUNT_POINT after thinning: ${USED_NOW}G ($((INITIAL_USED - USED_NOW))G reclaimed)"
 
         if [ -n "$TARGET_MAXIMUM_USAGE" ]; then
 
@@ -258,7 +269,7 @@ while read -d $'\0' TARGET_FILE; do
                     THIS_DATE="$(snapshot2date "$SNAPSHOT_DATE")"
                     THIS_TIMESTAMP=$(date2timestamp "$THIS_DATE")
                     NOW_TIMESTAMP=$(now2timestamp)
-                    THIS_AGE=$(( NOW_TIMESTAMP - THIS_TIMESTAMP ))
+                    THIS_AGE=$((NOW_TIMESTAMP - THIS_TIMESTAMP))
 
                     # in case percentages / limits have changed since we started
                     . "$TARGET_FILE"
@@ -270,12 +281,12 @@ while read -d $'\0' TARGET_FILE; do
                         while read -d $'\0' SNAPSHOT_ROOT; do
 
                             SNAPSHOTS_REMOVED="${SNAPSHOTS_REMOVED}${SNAPSHOT_ROOT}\n"
-                            (( SNAPSHOTS_REMOVED_COUNT++ ))
+                            ((SNAPSHOTS_REMOVED_COUNT++))
 
                             SNAPSHOT_NEW_ROOT="$(dirname "$SNAPSHOT_ROOT")/.expired.$(basename "$SNAPSHOT_ROOT")"
 
                             mv "$SNAPSHOT_ROOT" "$SNAPSHOT_NEW_ROOT"
-                            rm -Rf "$SNAPSHOT_NEW_ROOT"
+                            sudo rm -Rf "$SNAPSHOT_NEW_ROOT"
 
                         done < <(find "$TARGET_MOUNT_POINT/snapshots" -mindepth 2 -maxdepth 2 -type d -name "$SNAPSHOT_DATE" -print0)
 
@@ -356,4 +367,3 @@ else
     close_targets
 
 fi
-
